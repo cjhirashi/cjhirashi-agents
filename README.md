@@ -261,6 +261,48 @@ flowchart TD
 
 ---
 
+## 📊 Dashboard
+
+El dashboard es el corazón de la aplicación, proporcionando una interfaz intuitiva para gestionar y acceder a tus agentes de IA.
+
+### Características del Dashboard
+
+#### Sidebar de Navegación
+- **Colapsable**: Maximiza el espacio de trabajo con el botón de contraer/expandir
+- **Responsive**: En móvil se transforma en un menú hamburguesa accesible mediante Sheet
+- **Navegación Organizada**:
+  - **Principal**: Dashboard, Agentes, Conversaciones
+  - **Historial**: Mis Chats
+  - **Configuración**: Documentación, Ajustes
+- **Estados Activos**: Resalta visualmente la página actual
+- **Perfil de Usuario**: Sección inferior con avatar y datos (placeholder para autenticación)
+
+#### Página Principal del Dashboard
+- **Tarjetas de Estadísticas**:
+  - Agentes Disponibles
+  - Conversaciones Activas
+  - Última Actividad
+- **Grid de Agentes**: 6 agentes especializados con diseño elegante
+  - Code Assistant (Cyan) - Programación y debugging
+  - Data Analyst (Purple) - Análisis de datos
+  - Content Writer (Emerald) - Creación de contenido
+  - Research Assistant (Amber) - Investigación
+  - Creative Designer (Rose) - Diseño UI/UX
+  - DevOps Expert (Blue) - Infraestructura y CI/CD
+- **Tarjetas Interactivas**: Efectos hover con animaciones suaves
+
+#### Páginas de Navegación
+- `/dashboard` - Vista principal con estadísticas y agentes
+- `/dashboard/agents` - Exploración de agentes
+- `/dashboard/conversations` - Conversaciones activas
+- `/dashboard/history` - Historial de chats
+- `/dashboard/docs` - Documentación y guías
+- `/dashboard/settings` - Configuración de preferencias
+
+Para más detalles sobre el uso del dashboard, consulta [src/app/dashboard/README.md](src/app/dashboard/README.md)
+
+---
+
 ## 🚀 Instalación y Setup
 
 ### Prerrequisitos
@@ -370,14 +412,26 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ### 🚧 Fase 1 - MVP (En Progreso)
 
-- [ ] Setup base gráfica (navbar, sidebar, layout)
-- [ ] Integrar autenticación (NextAuth + Google)
-- [ ] Setup Prisma + Cloud SQL
-- [ ] Crear modelos de datos
-- [ ] Dashboard: selector de agentes
+#### Completado
+- [x] Setup base gráfica (navbar, sidebar, layout)
+- [x] Dashboard: selector de agentes
+- [x] Crear componente Sidebar colapsable y responsive
+- [x] Crear layout del dashboard con navegación
+- [x] Implementar páginas de navegación (Agentes, Conversaciones, Historial, Docs, Settings)
+- [x] Diseñar tarjetas de agentes con 6 variantes de color
+- [x] Agregar 6 agentes mock (Code Assistant, Data Analyst, Content Writer, Research Assistant, Creative Designer, DevOps Expert)
+- [x] Implementar estados activos en navegación
+- [x] Dashboard con estadísticas (Agentes, Conversaciones, Actividad)
+
+#### En Desarrollo
 - [ ] Chat interface básica
 - [ ] Integración con primer agente ADK
-- [ ] Historial de conversaciones
+- [ ] Historial de conversaciones funcional
+
+#### Pendiente
+- [ ] Integrar autenticación (NextAuth + Google)
+- [ ] Setup Prisma + Cloud SQL
+- [ ] Crear modelos de datos reales
 - [ ] Deploy a Vercel
 
 **ETA Fase 1:** Marzo 2025
