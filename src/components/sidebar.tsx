@@ -12,12 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  User
+  User,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import {
   DropdownMenu,
@@ -29,30 +30,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const navigationItems = [
-  {
-    title: "Principal",
-    items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Agentes", href: "/dashboard/agents", icon: Bot },
-      { name: "Conversaciones", href: "/dashboard/conversations", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "Historial",
-    items: [
-      { name: "Mis Chats", href: "/dashboard/history", icon: History },
-    ],
-  },
-  {
-    title: "Configuración",
-    items: [
-      { name: "Documentación", href: "/dashboard/docs", icon: FileText },
-      { name: "Ajustes", href: "/dashboard/settings", icon: Settings },
-    ],
-  },
-];
-
 interface SidebarProps {
   className?: string;
 }
@@ -61,6 +38,24 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!session?.user?.email) return;
+
+      try {
+        const res = await fetch("/api/admin/users");
+        // If the request succeeds without 403, user is admin
+        setIsAdmin(res.ok);
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdmin();
+  }, [session]);
 
   // Get user initials for avatar fallback
   const getInitials = (name?: string | null) => {
@@ -72,6 +67,37 @@ export function Sidebar({ className }: SidebarProps) {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Build navigation items dynamically based on admin status
+  const allNavigationItems = [
+    {
+      title: "Principal",
+      items: [
+        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Agentes", href: "/dashboard/agents", icon: Bot },
+        { name: "Conversaciones", href: "/dashboard/conversations", icon: MessageSquare },
+      ],
+    },
+    {
+      title: "Historial",
+      items: [
+        { name: "Mis Chats", href: "/dashboard/history", icon: History },
+      ],
+    },
+    ...(isAdmin ? [{
+      title: "Administración",
+      items: [
+        { name: "Admin Panel", href: "/dashboard/admin", icon: Shield },
+      ],
+    }] : []),
+    {
+      title: "Configuración",
+      items: [
+        { name: "Documentación", href: "/dashboard/docs", icon: FileText },
+        { name: "Ajustes", href: "/dashboard/settings", icon: Settings },
+      ],
+    },
+  ];
 
   return (
     <aside
@@ -101,7 +127,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-6 overflow-y-auto p-4">
-        {navigationItems.map((section, idx) => (
+        {allNavigationItems.map((section, idx) => (
           <div key={section.title}>
             {!collapsed && (
               <h3 className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
