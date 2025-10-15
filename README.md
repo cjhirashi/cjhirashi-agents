@@ -359,27 +359,48 @@ El proyecto incluye:
 - lucide-react (icons)
 - class-variance-authority, clsx, tailwind-merge
 
-### 4. Configurar variables de entorno (Próximamente)
+### 4. Configurar variables de entorno
 
-Crea un archivo `.env.local` en la raíz del proyecto:
+Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Luego edita `.env` con tus credenciales:
 
 ```env
 # Database
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="generate-a-random-secret-here"
+NEXTAUTH_SECRET="generate-a-random-secret-here"  # Genera uno con: openssl rand -base64 32
 
-# Google OAuth
-GOOGLE_CLIENT_ID="your-google-client-id"
+# Google OAuth (obtén en: https://console.cloud.google.com/apis/credentials)
+GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# ADK Agents
+# ADK Agents (Opcional por ahora)
 ADK_AGENT_ENDPOINT="https://your-cloud-run-url"
 ```
 
-### 5. Ejecutar en desarrollo
+**Para más detalles sobre la configuración de autenticación, consulta [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md)**
+
+### 5. Configurar base de datos
+
+```bash
+# Generar el cliente de Prisma
+npx prisma generate
+
+# Aplicar el schema a la base de datos
+npx prisma db push
+
+# (Opcional) Abrir Prisma Studio para ver los datos
+npx prisma studio
+```
+
+### 6. Ejecutar en desarrollo
 
 ```bash
 npm run dev
@@ -387,11 +408,13 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-### 6. Verificar funcionamiento
+### 7. Verificar funcionamiento
 
 - ✅ La página de inicio debe cargar
 - ✅ El toggle de tema (esquina superior derecha) debe cambiar entre dark/light/system
 - ✅ Los estilos deben verse correctamente en ambos temas
+- ✅ El sidebar debe mostrar la navegación correctamente
+- ✅ La autenticación con Google debe funcionar (si configuraste las credenciales)
 
 ---
 
@@ -428,11 +451,20 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 - [ ] Integración con primer agente ADK
 - [ ] Historial de conversaciones funcional
 
+#### Completado Recientemente
+- [x] Integrar autenticación (NextAuth + Google)
+- [x] Setup Prisma con modelos de NextAuth
+- [x] Crear modelos de datos (User, Account, AuthSession, VerificationToken)
+- [x] Sidebar con información de usuario autenticado
+- [x] Página de inicio de sesión con Google OAuth
+- [x] Página de error de autenticación
+- [x] SessionProvider en layout principal
+- [x] Menú de usuario con opciones (Perfil, Configuración, Cerrar sesión)
+
 #### Pendiente
-- [ ] Integrar autenticación (NextAuth + Google)
-- [ ] Setup Prisma + Cloud SQL
-- [ ] Crear modelos de datos reales
+- [ ] Configurar Cloud SQL en Google Cloud
 - [ ] Deploy a Vercel
+- [ ] Configurar variables de entorno de producción
 
 **ETA Fase 1:** Marzo 2025
 

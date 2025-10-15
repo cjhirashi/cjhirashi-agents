@@ -10,12 +10,24 @@ import {
   Settings,
   FileText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navigationItems = [
   {
@@ -48,6 +60,18 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { data: session } = useSession();
+
+  // Get user initials for avatar fallback
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <aside
@@ -132,18 +156,69 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
       </div>
 
-      {/* User Section - Placeholder for future auth */}
-      {!collapsed && (
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500" />
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium">Carlos Hirashi</p>
-              <p className="truncate text-xs text-muted-foreground">cjhirashi@gmail.com</p>
+      {/* User Section */}
+      <div className="border-t p-4">
+        {session?.user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 h-auto p-3",
+                  collapsed && "justify-center p-2"
+                )}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={session.user.image || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white">
+                    {getInitials(session.user.name)}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <div className="flex-1 overflow-hidden text-left">
+                    <p className="truncate text-sm font-medium">
+                      {session.user.name || "Usuario"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {session.user.email}
+                    </p>
+                  </div>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Configuración</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 focus:text-red-600"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          !collapsed && (
+            <div className="rounded-lg bg-muted/50 p-3 text-center">
+              <p className="text-sm text-muted-foreground">No autenticado</p>
             </div>
-          </div>
-        </div>
-      )}
+          )
+        )}
+      </div>
     </aside>
   );
 }
