@@ -3,16 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-white/10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="text-2xl font-bold">🤖</div>
-            <h1 className="text-xl font-semibold">CJHIRASHI Agents</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+      
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">

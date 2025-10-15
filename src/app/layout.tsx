@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CJHIRASHI Agents - Hub de Agentes IA",
-  description: "Hub personal de agentes de IA desarrollados con ADK de Google. Interfaz elegante y funcional para interactuar con agentes multimodales.",
-  authors: [{ name: "Carlos Jiménez Hirashi", url: "https://github.com/cjhirashi" }],
-  keywords: ["AI", "Agents", "ADK", "Google", "Chat", "IA", "Agentes"],
+  title: "cjhirashi agents",
+  description: "Hub personal de agentes de IA desarrollados con ADK de Google",
 };
 
 export default function RootLayout({
@@ -36,7 +35,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <Navbar />
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>
