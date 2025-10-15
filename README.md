@@ -9,7 +9,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript&logoColor=white)
 
-[Demo](#) • [Documentación](#) • [Roadmap](#-roadmap)
+[Demo](#) • [Documentación](#-documentación) • [Roadmap](#-roadmap)
 
 </div>
 
@@ -17,42 +17,52 @@
 
 ## 🎯 Sobre el Proyecto
 
-**CJHIRASHI Agents** es una aplicación web personal diseñada para integrar y gestionar agentes de IA desarrollados con **Agent Development Kit (ADK)** de Google. Proporciona una interfaz minimalista y elegante inspirada en Vercel para interactuar con agentes multimodales, gestionar conversaciones y visualizar outputs estructurados de forma intuitiva.
+**CJHIRASHI Agents** es una aplicación web personal diseñada para integrar y gestionar agentes de IA desarrollados con **Agent Development Kit (ADK)** de Google. Proporciona una interfaz minimalista y elegante inspirada en Vercel para interactuar con agentes multimodales, gestionar conversaciones y administrar usuarios con un sistema robusto de roles y permisos.
 
 ### ¿Por qué este proyecto?
 
 La proliferación de agentes de IA especializados requiere una interfaz unificada que permita:
 - **Centralizar** interacciones con múltiples agentes ADK
+- **Administrar** acceso granular por usuario y agente
 - **Mantener contexto** entre conversaciones largas y complejas
 - **Visualizar** outputs estructurados (código, tablas, gráficos) de forma óptima
-- **Evolucionar** hacia un sistema de artefactos y widgets personalizables
-
-Este proyecto nace como solución personal pero está arquitecturado para escalar hacia uso multi-usuario empresarial.
+- **Escalar** de uso personal a sistema multi-usuario empresarial
 
 ---
 
-## ✨ Características
+## ✨ Características Implementadas
 
-### Fase 1 - MVP (En Desarrollo)
+### ✅ Sistema de Autenticación
+- 🔐 **NextAuth v4** con Google OAuth
+- 🔄 **Estrategia JWT** para sesiones rápidas y escalables
+- 👤 **Perfil de Usuario** con avatar y datos en el sidebar
+- 🚪 **Login/Logout** con redirección inteligente
+- 🛡️ **Middleware de protección** de rutas del dashboard
 
-- 🎨 **Interfaz Minimalista**: Diseño inspirado en Vercel con tema claro/oscuro
-- 🤖 **Dashboard de Agentes**: Selector visual para múltiples agentes especializados
-- 💬 **Chat Interface**: Conversaciones fluidas con soporte markdown y código
-- 📚 **Historial Persistente**: Almacenamiento y búsqueda de conversaciones previas
-- 🔐 **Autenticación Personal**: Login seguro con Google OAuth
+### ✅ Sistema de Administración
+- 👥 **Gestión de Usuarios**
+  - Ver todos los usuarios del sistema
+  - Cambiar roles (ADMIN / USER)
+  - Activar/Desactivar cuentas
+  - Ver agentes asignados por usuario
 
-### Fase 2 - Artefactos (Planeado)
+- 🤖 **Gestión de Agentes**
+  - Ver todos los agentes del sistema
+  - Marcar agentes como públicos/privados
+  - Ver creador de cada agente
 
-- 📦 Sistema de artefactos para outputs complejos
-- 🎛️ Interfaces adaptativas según tipo de agente
-- 📊 Respuestas estructuradas con visualizaciones avanzadas
+- 🔑 **Sistema de Permisos Granular**
+  - Conceder/revocar acceso a agentes específicos
+  - Admins tienen acceso automático a todo
+  - Agentes públicos accesibles para todos
+  - Permisos individuales por usuario-agente
 
-### Fase 3 - Avanzado (Futuro)
-
-- 🕐 Versionado de outputs generados
-- 🧩 Sistema de widgets personalizables
-- 👥 Soporte multi-usuario con roles
-- 📈 Visualizaciones y analytics de uso
+### ✅ Interfaz de Usuario
+- 🎨 **Diseño Minimalista**: Inspirado en Vercel con tema claro/oscuro
+- 📱 **Responsive Design**: Sidebar colapsable y menú móvil
+- 🤖 **Dashboard de Agentes**: Grid visual con 6 agentes especializados
+- 📊 **Tarjetas de Estadísticas**: Métricas de agentes, conversaciones y actividad
+- 🧭 **Navegación Intuitiva**: Estados activos y transiciones suaves
 
 ---
 
@@ -60,32 +70,14 @@ Este proyecto nace como solución personal pero está arquitecturado para escala
 
 ### Stack Tecnológico
 
-```mermaid
-graph LR
-    A[Cliente Web] -->|Next.js 15| B[Frontend Layer]
-    B -->|API Routes| C[Backend Layer]
-    C -->|Prisma| D[(Cloud SQL PostgreSQL)]
-    C -->|HTTP| E[Cloud Run - ADK Agents]
-    B -->|NextAuth v4| F[Google OAuth]
-    
-    style A fill:#06B6D4,stroke:#333,stroke-width:2px,color:#000
-    style B fill:#000,stroke:#06B6D4,stroke-width:2px,color:#fff
-    style C fill:#000,stroke:#06B6D4,stroke-width:2px,color:#fff
-    style D fill:#316192,stroke:#333,stroke-width:2px,color:#fff
-    style E fill:#4285F4,stroke:#333,stroke-width:2px,color:#fff
-    style F fill:#DB4437,stroke:#333,stroke-width:2px,color:#fff
-```
-
-### Componentes del Stack
-
 | Capa | Tecnología | Versión | Propósito |
 |------|-----------|---------|-----------|
-| **Frontend** | Next.js + Tailwind CSS + shadcn/ui | 15.5.5 / v4 / latest | Interfaz de usuario responsiva y moderna |
-| **State Management** | Zustand | latest | Gestión de estado global ligera |
+| **Frontend** | Next.js + Tailwind CSS + shadcn/ui | 15.5.5 / v4 / latest | Interfaz de usuario responsiva |
+| **State Management** | Zustand | latest | Gestión de estado global |
 | **Backend** | Next.js API Routes + Zod | 15.5.5 / latest | Validación y endpoints API |
 | **Base de Datos** | PostgreSQL (Cloud SQL) | - | Persistencia de datos |
-| **ORM** | Prisma | latest | Abstracción de base de datos |
-| **Autenticación** | NextAuth.js v4 | latest | Autenticación OAuth con Google |
+| **ORM** | Prisma | 6.17.1 | Abstracción de base de datos |
+| **Autenticación** | NextAuth.js v4 | 4.24.11 | OAuth con Google + JWT |
 | **Theme** | next-themes | latest | Sistema de temas dark/light/system |
 | **Icons** | lucide-react | latest | Iconografía consistente |
 | **Agentes IA** | ADK (Google Cloud Run) | - | Ejecución de agentes multimodales |
@@ -95,211 +87,73 @@ graph LR
 
 ## 🗂️ Estructura de Datos
 
-### Diagrama Entidad-Relación
-
-```mermaid
-erDiagram
-    USER ||--o{ SESSION : creates
-    USER ||--o{ AGENT : owns
-    SESSION ||--o{ CONVERSATION : contains
-    CONVERSATION ||--o{ MESSAGE : includes
-    AGENT ||--o{ CONVERSATION : participates
-    
-    USER {
-        uuid id PK
-        string email
-        string name
-        string image
-        datetime created_at
-        datetime updated_at
-    }
-    
-    AGENT {
-        uuid id PK
-        uuid user_id FK
-        string name
-        string description
-        string model
-        json config
-        string endpoint_url
-        datetime created_at
-    }
-    
-    SESSION {
-        uuid id PK
-        uuid user_id FK
-        datetime started_at
-        datetime last_activity
-        json metadata
-    }
-    
-    CONVERSATION {
-        uuid id PK
-        uuid session_id FK
-        uuid agent_id FK
-        string title
-        datetime created_at
-        datetime updated_at
-    }
-    
-    MESSAGE {
-        uuid id PK
-        uuid conversation_id FK
-        string role
-        text content
-        json metadata
-        datetime timestamp
-    }
-```
-
-### Modelos de Datos (Prisma Schema)
+### Modelos Principales
 
 ```prisma
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  image         String?
-  sessions      Session[]
-  agents        Agent[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String              @id @default(uuid())
+  email            String?             @unique
+  name             String?
+  role             UserRole            @default(USER)  // ADMIN | USER
+  isActive         Boolean             @default(true)
+  createdAgents    Agent[]             @relation("CreatedAgents")
+  agentPermissions UserAgentPermission[]
+  authSessions     Session[]
+  chatSessions     ChatSession[]
 }
 
 model Agent {
-  id            String         @id @default(uuid())
-  userId        String
-  user          User           @relation(fields: [userId], references: [id])
-  name          String
-  description   String?
-  model         String
-  config        Json?
-  endpointUrl   String
-  conversations Conversation[]
-  createdAt     DateTime       @default(now())
+  id              String                @id @default(uuid())
+  createdBy       String
+  name            String
+  description     String?
+  model           String
+  isPublic        Boolean               @default(false)
+  creator         User                  @relation("CreatedAgents")
+  userPermissions UserAgentPermission[]
+  conversations   Conversation[]
 }
 
-model Session {
+model UserAgentPermission {
+  id        String   @id @default(uuid())
+  userId    String
+  agentId   String
+  grantedBy String?  // Admin que concedió el permiso
+  user      User     @relation(...)
+  agent     Agent    @relation(...)
+
+  @@unique([userId, agentId])
+}
+
+model ChatSession {
   id            String         @id @default(uuid())
   userId        String
-  user          User           @relation(fields: [userId], references: [id])
-  startedAt     DateTime       @default(now())
-  lastActivity  DateTime       @updatedAt
-  metadata      Json?
   conversations Conversation[]
 }
 
 model Conversation {
-  id          String    @id @default(uuid())
-  sessionId   String
-  session     Session   @relation(fields: [sessionId], references: [id])
-  agentId     String
-  agent       Agent     @relation(fields: [agentId], references: [id])
-  title       String
-  messages    Message[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String      @id @default(uuid())
+  chatSessionId String
+  agentId       String
+  title         String
+  messages      Message[]
 }
 
 model Message {
-  id              String       @id @default(uuid())
-  conversationId  String
-  conversation    Conversation @relation(fields: [conversationId], references: [id])
-  role            String       // 'user' | 'assistant' | 'system'
-  content         String       @db.Text
-  metadata        Json?
-  timestamp       DateTime     @default(now())
+  id      String  @id @default(uuid())
+  role    String  // 'user' | 'assistant' | 'system'
+  content String  @db.Text
 }
 ```
 
----
+### Sistema de Permisos
 
-## 🔄 Flujo del Sistema
+El sistema implementa **4 niveles de acceso** a los agentes:
 
-### Flujo Completo de Interacción
-
-```mermaid
-flowchart TD
-    A[Usuario accede a la app] --> B{¿Autenticado?}
-    B -->|No| C[Redirect a Login Google OAuth]
-    C --> D[NextAuth valida credenciales]
-    D --> E[Crea/actualiza User en DB]
-    E --> F[Redirect a Dashboard]
-    
-    B -->|Sí| F
-    F --> G[Dashboard: Lista de agentes disponibles]
-    G --> H[Usuario selecciona agente]
-    H --> I[Carga interfaz de chat]
-    
-    I --> J[Usuario envía mensaje]
-    J --> K[Frontend: Envía POST a /api/chat]
-    K --> L[Backend: Valida request con Zod]
-    L --> M[Backend: Guarda mensaje en DB]
-    M --> N[Backend: Llama a Cloud Run Agent]
-    
-    N --> O{Respuesta exitosa?}
-    O -->|Sí| P[Parsea respuesta del agente]
-    P --> Q[Guarda mensaje assistant en DB]
-    Q --> R[Retorna respuesta al frontend]
-    R --> S[Frontend: Renderiza respuesta]
-    S --> T[Actualiza UI con markdown/código]
-    
-    O -->|No| U[Maneja error]
-    U --> V[Muestra mensaje de error al usuario]
-    
-    T --> W{¿Continuar conversación?}
-    W -->|Sí| J
-    W -->|No| X[Guarda conversación]
-    X --> Y[Usuario puede navegar historial]
-    
-    style A fill:#06B6D4,stroke:#333,stroke-width:2px,color:#000
-    style F fill:#000,stroke:#06B6D4,stroke-width:2px,color:#fff
-    style I fill:#000,stroke:#06B6D4,stroke-width:2px,color:#fff
-    style S fill:#10B981,stroke:#333,stroke-width:2px,color:#000
-    style V fill:#EF4444,stroke:#333,stroke-width:2px,color:#fff
-```
-
----
-
-## 📊 Dashboard
-
-El dashboard es el corazón de la aplicación, proporcionando una interfaz intuitiva para gestionar y acceder a tus agentes de IA.
-
-### Características del Dashboard
-
-#### Sidebar de Navegación
-- **Colapsable**: Maximiza el espacio de trabajo con el botón de contraer/expandir
-- **Responsive**: En móvil se transforma en un menú hamburguesa accesible mediante Sheet
-- **Navegación Organizada**:
-  - **Principal**: Dashboard, Agentes, Conversaciones
-  - **Historial**: Mis Chats
-  - **Configuración**: Documentación, Ajustes
-- **Estados Activos**: Resalta visualmente la página actual
-- **Perfil de Usuario**: Sección inferior con avatar y datos (placeholder para autenticación)
-
-#### Página Principal del Dashboard
-- **Tarjetas de Estadísticas**:
-  - Agentes Disponibles
-  - Conversaciones Activas
-  - Última Actividad
-- **Grid de Agentes**: 6 agentes especializados con diseño elegante
-  - Code Assistant (Cyan) - Programación y debugging
-  - Data Analyst (Purple) - Análisis de datos
-  - Content Writer (Emerald) - Creación de contenido
-  - Research Assistant (Amber) - Investigación
-  - Creative Designer (Rose) - Diseño UI/UX
-  - DevOps Expert (Blue) - Infraestructura y CI/CD
-- **Tarjetas Interactivas**: Efectos hover con animaciones suaves
-
-#### Páginas de Navegación
-- `/dashboard` - Vista principal con estadísticas y agentes
-- `/dashboard/agents` - Exploración de agentes
-- `/dashboard/conversations` - Conversaciones activas
-- `/dashboard/history` - Historial de chats
-- `/dashboard/docs` - Documentación y guías
-- `/dashboard/settings` - Configuración de preferencias
-
-Para más detalles sobre el uso del dashboard, consulta [src/app/dashboard/README.md](src/app/dashboard/README.md)
+1. **🔴 ADMIN**: Acceso automático a todos los agentes
+2. **🟢 Agentes Públicos**: Accesibles para todos los usuarios activos
+3. **🟡 Permisos Explícitos**: Acceso concedido individualmente por admin
+4. **🔵 Creador**: El usuario que creó el agente siempre tiene acceso
 
 ---
 
@@ -322,72 +176,37 @@ git clone https://github.com/cjhirashi/cjhirashi-agents.git
 cd cjhirashi-agents
 ```
 
-### 2. Instalar dependencias del proyecto
-
-El proyecto ya viene con `package.json` configurado. Instala todas las dependencias:
+### 2. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-### 3. Componentes y librerías instaladas
+### 3. Configurar variables de entorno
 
-El proyecto incluye:
-
-**Core:**
-- Next.js 15.5.5
-- React 19
-- TypeScript 5.0+
-- Tailwind CSS v4
-
-**UI Components (shadcn/ui):**
-- button, card, input, textarea
-- avatar, dropdown-menu, separator
-- scroll-area, sonner (notifications)
-
-**State & Auth:**
-- Zustand (state management)
-- NextAuth.js v4 (authentication)
-
-**Database:**
-- Prisma (ORM)
-- @prisma/client
-
-**Utilities:**
-- next-themes (theme management)
-- zod (validation)
-- lucide-react (icons)
-- class-variance-authority, clsx, tailwind-merge
-
-### 4. Configurar variables de entorno
-
-Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Luego edita `.env` con tus credenciales:
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
-# Database
+# Database - Cloud SQL (Google Cloud)
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="generate-a-random-secret-here"  # Genera uno con: openssl rand -base64 32
+NEXTAUTH_SECRET="generate-a-random-secret"  # Genera con: openssl rand -base64 32
 
-# Google OAuth (obtén en: https://console.cloud.google.com/apis/credentials)
+# Google OAuth
 GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# ADK Agents (Opcional por ahora)
+# ADK Agents (Opcional)
 ADK_AGENT_ENDPOINT="https://your-cloud-run-url"
 ```
 
-**Para más detalles sobre la configuración de autenticación, consulta [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md)**
+**📚 Para más detalles:**
+- Autenticación: [docs/AUTH_SETUP.md](docs/AUTH_SETUP.md)
+- Cloud SQL: [docs/CLOUD_SQL_SETUP.md](docs/CLOUD_SQL_SETUP.md)
 
-### 5. Configurar base de datos
+### 4. Configurar base de datos
 
 ```bash
 # Generar el cliente de Prisma
@@ -396,8 +215,15 @@ npx prisma generate
 # Aplicar el schema a la base de datos
 npx prisma db push
 
-# (Opcional) Abrir Prisma Studio para ver los datos
+# (Opcional) Abrir Prisma Studio
 npx prisma studio
+```
+
+### 5. Configurar usuario administrador
+
+```bash
+# Hacer a un usuario administrador
+npm run set-admin tu-email@gmail.com
 ```
 
 ### 6. Ejecutar en desarrollo
@@ -408,83 +234,100 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-### 7. Verificar funcionamiento
+---
 
-- ✅ La página de inicio debe cargar
-- ✅ El toggle de tema (esquina superior derecha) debe cambiar entre dark/light/system
-- ✅ Los estilos deben verse correctamente en ambos temas
-- ✅ El sidebar debe mostrar la navegación correctamente
-- ✅ La autenticación con Google debe funcionar (si configuraste las credenciales)
+## 🔧 Scripts Disponibles
+
+```bash
+# Desarrollo
+npm run dev              # Inicia servidor de desarrollo
+
+# Build
+npm run build            # Construye para producción
+npm run start            # Inicia servidor de producción
+
+# Base de datos
+npx prisma generate      # Regenera cliente de Prisma
+npx prisma db push       # Aplica cambios del schema
+npx prisma studio        # Abre interfaz visual de datos
+
+# Administración
+npm run set-admin <email>    # Hace a un usuario administrador
+```
+
+---
+
+## 📊 Panel de Administración
+
+### Acceso
+
+1. Inicia sesión con tu cuenta de Google
+2. Asegúrate de tener rol **ADMIN** (usa `npm run set-admin`)
+3. En el sidebar verás la opción "Admin Panel"
+4. Accede a: [http://localhost:3000/dashboard/admin](http://localhost:3000/dashboard/admin)
+
+### Características
+
+#### 👥 Pestaña de Usuarios
+- **Ver usuarios**: Lista completa con email, rol y estado
+- **Cambiar roles**: Switch entre USER y ADMIN
+- **Activar/Desactivar**: Control de acceso a la plataforma
+- **Ver permisos**: Agentes asignados a cada usuario
+- **Gestionar permisos**: Conceder/revocar acceso a agentes específicos
+
+#### 🤖 Pestaña de Agentes
+- **Ver todos los agentes**: Lista con creador y modelo
+- **Visibilidad**: Marcar agentes como públicos o privados
+- **Información**: Descripción y configuración de cada agente
 
 ---
 
 ## 🗺️ Roadmap
 
 ### ✅ Fase 0 - Setup Inicial (Completada)
+- [x] Proyecto Next.js 15 con TypeScript
+- [x] Tailwind CSS v4 + shadcn/ui
+- [x] Theme provider (dark/light/system)
+- [x] Componentes UI base
+- [x] Landing page
 
-- [x] Crear repositorio GitHub
-- [x] Generar README con arquitectura completa
-- [x] Inicializar proyecto Next.js 15 con TypeScript
-- [x] Configurar Tailwind CSS v4
-- [x] Instalar y configurar shadcn/ui (New York style, Slate theme)
-- [x] Implementar theme provider (dark/light/system)
-- [x] Crear componente ThemeToggle
-- [x] Instalar componentes UI base (button, card, input, textarea, avatar, dropdown-menu, separator, scroll-area, sonner)
-- [x] Crear landing page inicial
-- [x] Verificar servidor de desarrollo funcionando
+### ✅ Fase 1 - MVP (Completada)
+- [x] Dashboard con selector de agentes
+- [x] Sidebar colapsable y responsive
+- [x] Navegación completa
+- [x] **Autenticación con Google OAuth**
+- [x] **Sistema de roles (ADMIN/USER)**
+- [x] **Panel de administración completo**
+- [x] **Gestión de permisos por agente**
+- [x] **Middleware de protección de rutas**
 
-### 🚧 Fase 1 - MVP (En Progreso)
+### 🚧 Fase 2 - Chat y Agentes (En Progreso)
+- [ ] Interfaz de chat funcional
+- [ ] Integración con agentes ADK
+- [ ] Historial de conversaciones
+- [ ] Mensajes en tiempo real
+- [ ] Soporte para markdown y código
 
-#### Completado
-- [x] Setup base gráfica (navbar, sidebar, layout)
-- [x] Dashboard: selector de agentes
-- [x] Crear componente Sidebar colapsable y responsive
-- [x] Crear layout del dashboard con navegación
-- [x] Implementar páginas de navegación (Agentes, Conversaciones, Historial, Docs, Settings)
-- [x] Diseñar tarjetas de agentes con 6 variantes de color
-- [x] Agregar 6 agentes mock (Code Assistant, Data Analyst, Content Writer, Research Assistant, Creative Designer, DevOps Expert)
-- [x] Implementar estados activos en navegación
-- [x] Dashboard con estadísticas (Agentes, Conversaciones, Actividad)
-
-#### En Desarrollo
-- [ ] Chat interface básica
-- [ ] Integración con primer agente ADK
-- [ ] Historial de conversaciones funcional
-
-#### Completado Recientemente
-- [x] Integrar autenticación (NextAuth + Google)
-- [x] Setup Prisma con modelos de NextAuth
-- [x] Crear modelos de datos (User, Account, AuthSession, VerificationToken)
-- [x] Sidebar con información de usuario autenticado
-- [x] Página de inicio de sesión con Google OAuth
-- [x] Página de error de autenticación
-- [x] SessionProvider en layout principal
-- [x] Menú de usuario con opciones (Perfil, Configuración, Cerrar sesión)
-
-#### Pendiente
-- [ ] Configurar Cloud SQL en Google Cloud
-- [ ] Deploy a Vercel
-- [ ] Configurar variables de entorno de producción
-
-**ETA Fase 1:** Marzo 2025
-
-### 💭 Fase 2 - Artefactos (Planeado)
-
+### 💭 Fase 3 - Artefactos (Planeado)
 - [ ] Sistema de artefactos
-- [ ] Interfaces adaptativas por tipo de agente
+- [ ] Interfaces adaptativas por agente
 - [ ] Respuestas estructuradas complejas
-
-**ETA Fase 2:** Abril 2025
-
-### 🔮 Fase 3 - Avanzado (Futuro)
-
-- [ ] Versionado de outputs
-- [ ] Sistema de widgets
-- [ ] Multi-usuario con roles
-- [ ] Consultas a datos históricos
 - [ ] Visualizaciones avanzadas
 
-**ETA Fase 3:** Q3 2025
+### 🔮 Fase 4 - Avanzado (Futuro)
+- [ ] Versionado de outputs
+- [ ] Sistema de widgets personalizables
+- [ ] Analytics de uso
+- [ ] API pública para integraciones
+
+---
+
+## 📚 Documentación
+
+- **[Guía de Autenticación](docs/AUTH_SETUP.md)** - Configurar Google OAuth
+- **[Setup de Cloud SQL](docs/CLOUD_SQL_SETUP.md)** - Configurar PostgreSQL en GCP
+- **[Migración a Agentes](docs/MIGRATION_TO_AGENTS.md)** - Guía de actualización del sistema de permisos
+- **[Dashboard](src/app/dashboard/README.md)** - Uso del dashboard
 
 ---
 
@@ -493,49 +336,36 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 ### Paleta de Colores
 
 #### Modo Oscuro (Default)
-- **Background Primary:** `#000000`
-- **Background Secondary:** `#111111`
-- **Text Primary:** `#FFFFFF`
-- **Accent:** `#06B6D4` (Cyan)
+- **Background**: `#000000` / `#111111`
+- **Text**: `#FFFFFF`
+- **Accent**: `#06B6D4` (Cyan)
 
 #### Modo Claro
-- **Background Primary:** `#FFFFFF`
-- **Background Secondary:** `#FAFAFA`
-- **Text Primary:** `#000000`
-- **Accent:** `#06B6D4` (Cyan)
+- **Background**: `#FFFFFF` / `#FAFAFA`
+- **Text**: `#000000`
+- **Accent**: `#06B6D4` (Cyan)
 
-### Principios de Diseño
-
-1. **Minimalismo Elegante**: Inspirado en Vercel - limpio, espaciado generoso, tipografía clara
-2. **Responsividad Total**: Mobile-first approach con breakpoints optimizados
-3. **Microinteracciones**: Animaciones sutiles que mejoran la experiencia
-4. **Accesibilidad**: WCAG 2.1 AA compliance en contraste y navegación
+### Principios
+1. **Minimalismo Elegante**: Inspirado en Vercel
+2. **Responsividad Total**: Mobile-first
+3. **Microinteracciones**: Animaciones sutiles
+4. **Accesibilidad**: WCAG 2.1 AA
 
 ---
 
 ## 🤝 Contribuciones
 
-Este es un proyecto personal en desarrollo activo. Si tienes sugerencias o encuentras bugs:
+Este es un proyecto personal en desarrollo activo. Sugerencias y bugs:
 
 1. Abre un [Issue](https://github.com/cjhirashi/cjhirashi-agents/issues)
-2. Describe el problema o mejora propuesta
-3. Incluye capturas de pantalla si es relevante
+2. Describe el problema o mejora
+3. Incluye capturas si es relevante
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está licenciado bajo la [MIT License](LICENSE).
-
-```txt
-MIT License
-
-Copyright (c) 2025 Carlos Jiménez Hirashi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction...
-```
+MIT License - Copyright (c) 2025 Carlos Jiménez Hirashi
 
 ---
 
@@ -544,17 +374,16 @@ in the Software without restriction...
 **Carlos Jiménez Hirashi** - *Creator & Lead Developer*
 
 - GitHub: [@cjhirashi](https://github.com/cjhirashi)
-- LinkedIn: [@cjhirashi](https://linkedin.com/in/cjhirashi)
 - Email: [cjhirashi@gmail.com](mailto:cjhirashi@gmail.com)
 
 ---
 
 ## 🙏 Agradecimientos
 
-- **Google ADK Team** - Por el framework de agentes de IA
-- **Vercel** - Inspiración en diseño y hosting platform
+- **Google ADK Team** - Framework de agentes de IA
+- **Vercel** - Inspiración en diseño y hosting
 - **shadcn/ui** - Componentes UI de alta calidad
-- **Next.js Team** - Por el mejor framework React
+- **Next.js Team** - El mejor framework React
 
 ---
 
