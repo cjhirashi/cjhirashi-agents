@@ -49,7 +49,7 @@ export function Sidebar({ className }: SidebarProps) {
         const res = await fetch("/api/admin/users");
         // If the request succeeds without 403, user is admin
         setIsAdmin(res.ok);
-      } catch (error) {
+      } catch {
         setIsAdmin(false);
       }
     };

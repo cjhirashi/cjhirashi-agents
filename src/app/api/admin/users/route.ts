@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: { role?: UserRole; isActive?: boolean } = {};
     if (role !== undefined) updateData.role = role as UserRole;
     if (isActive !== undefined) updateData.isActive = isActive;
 
