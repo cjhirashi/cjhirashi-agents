@@ -78,16 +78,18 @@ graph LR
 
 ### Componentes del Stack
 
-| Capa | Tecnología | Propósito |
-|------|-----------|-----------|
-| **Frontend** | Next.js 15 + Tailwind CSS + shadcn/ui | Interfaz de usuario responsiva y moderna |
-| **State Management** | Zustand | Gestión de estado global ligera |
-| **Backend** | Next.js API Routes + Zod | Validación y endpoints API |
-| **Base de Datos** | PostgreSQL (Cloud SQL) | Persistencia de datos |
-| **ORM** | Prisma | Abstracción de base de datos |
-| **Autenticación** | NextAuth.js v4 | Autenticación OAuth con Google |
-| **Agentes IA** | ADK (Google Cloud Run) | Ejecución de agentes multimodales |
-| **Hosting** | Vercel + Google Cloud Platform | Deploy frontend + backend/agentes |
+| Capa | Tecnología | Versión | Propósito |
+|------|-----------|---------|-----------|
+| **Frontend** | Next.js + Tailwind CSS + shadcn/ui | 15.5.5 / v4 / latest | Interfaz de usuario responsiva y moderna |
+| **State Management** | Zustand | latest | Gestión de estado global ligera |
+| **Backend** | Next.js API Routes + Zod | 15.5.5 / latest | Validación y endpoints API |
+| **Base de Datos** | PostgreSQL (Cloud SQL) | - | Persistencia de datos |
+| **ORM** | Prisma | latest | Abstracción de base de datos |
+| **Autenticación** | NextAuth.js v4 | latest | Autenticación OAuth con Google |
+| **Theme** | next-themes | latest | Sistema de temas dark/light/system |
+| **Icons** | lucide-react | latest | Iconografía consistente |
+| **Agentes IA** | ADK (Google Cloud Run) | - | Ejecución de agentes multimodales |
+| **Hosting** | Vercel + Google Cloud Platform | - | Deploy frontend + backend/agentes |
 
 ---
 
@@ -267,7 +269,7 @@ flowchart TD
 # Node.js 18+
 node --version
 
-# npm o pnpm
+# npm
 npm --version
 ```
 
@@ -278,15 +280,44 @@ git clone https://github.com/cjhirashi/cjhirashi-agents.git
 cd cjhirashi-agents
 ```
 
-### 2. Instalar dependencias
+### 2. Instalar dependencias del proyecto
+
+El proyecto ya viene con `package.json` configurado. Instala todas las dependencias:
 
 ```bash
 npm install
-# o
-pnpm install
 ```
 
-### 3. Configurar variables de entorno
+### 3. Componentes y librerías instaladas
+
+El proyecto incluye:
+
+**Core:**
+- Next.js 15.5.5
+- React 19
+- TypeScript 5.0+
+- Tailwind CSS v4
+
+**UI Components (shadcn/ui):**
+- button, card, input, textarea
+- avatar, dropdown-menu, separator
+- scroll-area, sonner (notifications)
+
+**State & Auth:**
+- Zustand (state management)
+- NextAuth.js v4 (authentication)
+
+**Database:**
+- Prisma (ORM)
+- @prisma/client
+
+**Utilities:**
+- next-themes (theme management)
+- zod (validation)
+- lucide-react (icons)
+- class-variance-authority, clsx, tailwind-merge
+
+### 4. Configurar variables de entorno (Próximamente)
 
 Crea un archivo `.env.local` en la raíz del proyecto:
 
@@ -306,19 +337,6 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ADK_AGENT_ENDPOINT="https://your-cloud-run-url"
 ```
 
-### 4. Inicializar base de datos
-
-```bash
-# Genera el cliente Prisma
-npx prisma generate
-
-# Ejecuta migraciones
-npx prisma migrate dev --name init
-
-# (Opcional) Seed de datos
-npx prisma db seed
-```
-
 ### 5. Ejecutar en desarrollo
 
 ```bash
@@ -327,17 +345,28 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
+### 6. Verificar funcionamiento
+
+- ✅ La página de inicio debe cargar
+- ✅ El toggle de tema (esquina superior derecha) debe cambiar entre dark/light/system
+- ✅ Los estilos deben verse correctamente en ambos temas
+
 ---
 
 ## 🗺️ Roadmap
 
-### ✅ Fase 0 - Setup Inicial (Actual)
+### ✅ Fase 0 - Setup Inicial (Completada)
 
 - [x] Crear repositorio GitHub
-- [x] Generar README con arquitectura
-- [ ] Inicializar proyecto Next.js
-- [ ] Configurar Tailwind + shadcn/ui
-- [ ] Implementar theme provider (dark/light)
+- [x] Generar README con arquitectura completa
+- [x] Inicializar proyecto Next.js 15 con TypeScript
+- [x] Configurar Tailwind CSS v4
+- [x] Instalar y configurar shadcn/ui (New York style, Slate theme)
+- [x] Implementar theme provider (dark/light/system)
+- [x] Crear componente ThemeToggle
+- [x] Instalar componentes UI base (button, card, input, textarea, avatar, dropdown-menu, separator, scroll-area, sonner)
+- [x] Crear landing page inicial
+- [x] Verificar servidor de desarrollo funcionando
 
 ### 🚧 Fase 1 - MVP (En Progreso)
 
