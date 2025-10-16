@@ -48,7 +48,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 --card backdrop-blur-sm supports-[backdrop-filter]:bg-card/95">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-card backdrop-blur-sm supports-[backdrop-filter]:bg-card/95">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
