@@ -1,0 +1,852 @@
+// ═══════════════════════════════════════════════════════════
+// CJHIRASHI Agents - Database Schema v2.0
+// Sistema de Asistente Personal de IA
+// ═══════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE USUARIOS Y AUTENTICACIÓN
+// ═══════════════════════════════════════════════════════════
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  emailVerified     DateTime?
+
+  // Información básica
+  name              String?
+  displayName       String?   // Nombre preferido por el usuario
+  avatar            String?
+  dateOfBirth       DateTime?
+  timezone          String    @default("America/Mexico_City")
+  language          String    @default("es")
+  bio               String?   @db.Text
+
+  // Sistema de roles y permisos
+  role              UserRole  @default(USER)
+  permissions       Json?     // Permisos personalizados granulares
+  isActive          Boolean   @default(true)
+
+  // Perfil de personalidad generado por IA
+  personalityProfile Json?    // Ver estructura en documentación
+  aiProfileLastUpdate DateTime?
+
+  // Sistema de suscripciones
+  subscriptionTier  SubscriptionTier @default(FREE)
+  subscriptionId    String?   // ID externo (Stripe, etc)
+  subscriptionStart DateTime?
+  subscriptionEnd   DateTime?
+  customLimits      Json?     // Límites personalizados por super admin
+
+  // Métricas de uso
+  totalMessages     Int       @default(0)
+  totalTokensUsed   BigInt    @default(0)
+  monthlyMessages   Int       @default(0)
+  monthlyTokens     BigInt    @default(0)
+  lastResetAt       DateTime  @default(now())
+  lastInteraction   DateTime?
+
+  // Relaciones de autenticación
+  accounts          Account[]
+  authSessions      Session[]
+
+  // Relaciones de sistema
+  createdAgents     Agent[]              @relation("CreatedAgents")
+  agentPermissions  UserAgentPermission[]
+  chatSessions      ChatSession[]
+
+  // Relaciones de perfil
+  healthProfile     HealthProfile?
+  financialProfile  FinancialProfile?
+
+  // Relaciones de uso y auditoría
+  usageLogs         UsageLog[]
+  monthlyUsage      MonthlyUsage[]
+  usageAlerts       UsageAlert[]
+  invitationsSent   Invitation[]         @relation("InvitationsSent")
+  invitationsReceived Invitation[]       @relation("InvitationsReceived")
+  auditLogs         AuditLog[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN  // Control total - Solo cjhirashi@gmail.com
+  ADMIN        // Gestión de usuarios y permisos
+  MANAGER      // Supervisión y reportes (futuro)
+  DEVELOPER    // Crear y gestionar agentes (futuro)
+  USER         // Usuario estándar
+  GUEST        // Acceso limitado (futuro)
+}
+
+enum SubscriptionTier {
+  FREE           // Límites básicos
+  BASIC          // Plan entrada
+  PRO            // Plan profesional
+  ENTERPRISE     // Plan empresarial
+  CUSTOM         // Plan personalizado por super admin
+  UNLIMITED      // Sin límites (para usuarios especiales)
+}
+
+// Tabla de autenticación OAuth
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// Sesiones de autenticación
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sessions")
+}
+
+// Tokens de verificación
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Sistema de invitaciones
+model Invitation {
+  id          String           @id @default(uuid())
+  email       String
+  token       String           @unique
+  role        UserRole
+  status      InvitationStatus @default(PENDING)
+  invitedBy   String           // User ID del admin que invitó
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+
+  inviter     User             @relation("InvitationsSent", fields: [invitedBy], references: [id], onDelete: Cascade)
+  invitee     User?            @relation("InvitationsReceived", fields: [email], references: [email])
+
+  createdAt   DateTime         @default(now())
+
+  @@index([email])
+  @@index([invitedBy])
+  @@map("invitations")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE SALUD
+// ═══════════════════════════════════════════════════════════
+
+model HealthProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+
+  // Información básica
+  bloodType         String?
+  height            Decimal?  // cm
+  weight            Decimal?  // kg
+  sex               String?
+
+  // Contactos de emergencia (JSON encriptado)
+  emergencyContacts Json?
+
+  // Información de seguros
+  insuranceInfo     Json?
+
+  // Datos altamente sensibles (encriptados)
+  encryptedData     String?   @db.Text
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conditions        MedicalCondition[]
+  medications       Medication[]
+  allergies         Allergy[]
+  appointments      MedicalAppointment[]
+  measurements      HealthMeasurement[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("health_profiles")
+}
+
+model MedicalCondition {
+  id                String    @id @default(uuid())
+  healthProfileId   String
+
+  name              String
+  type              String    // "crónica", "aguda", "genética"
+  severity          String    // "leve", "moderada", "severa"
+  diagnosedDate     DateTime?
+  diagnosedBy       String?
+  status            String    @default("activa")
+
+  notes             String?   @db.Text
+  treatment         Json?
+
+  healthProfile     HealthProfile @relation(fields: [healthProfileId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([healthProfileId])
+  @@map("medical_conditions")
+}
+
+model Medication {
+  id                String    @id @default(uuid())
+  healthProfileId   String
+
+  name              String
+  genericName       String?
+  dosage            String
+  frequency         String
+  route             String
+
+  prescribedBy      String?
+  prescribedDate    DateTime?
+  startDate         DateTime
+  endDate           DateTime?
+
+  purpose           String?
+  sideEffects       String?   @db.Text
+  interactions      Json?
+
+  // Sistema de recordatorios
+  reminderEnabled   Boolean   @default(false)
+  reminderTimes     Json?
+
+  isActive          Boolean   @default(true)
+  notes             String?   @db.Text
+
+  healthProfile     HealthProfile @relation(fields: [healthProfileId], references: [id], onDelete: Cascade)
+  adherenceLogs     MedicationLog[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([healthProfileId])
+  @@index([isActive])
+  @@map("medications")
+}
+
+model MedicationLog {
+  id              String     @id @default(uuid())
+  medicationId    String
+  scheduledTime   DateTime
+  takenTime       DateTime?
+  status          String     // "tomado", "omitido", "retrasado"
+  notes           String?
+
+  medication      Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime   @default(now())
+
+  @@index([medicationId, scheduledTime])
+  @@map("medication_logs")
+}
+
+model Allergy {
+  id                String    @id @default(uuid())
+  healthProfileId   String
+
+  allergen          String
+  type              String    // "medicamento", "alimento", "ambiental"
+  severity          String    // "leve", "moderada", "severa", "anafiláctica"
+  reaction          String?   @db.Text
+  diagnosedDate     DateTime?
+
+  notes             String?   @db.Text
+
+  healthProfile     HealthProfile @relation(fields: [healthProfileId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+
+  @@index([healthProfileId])
+  @@map("allergies")
+}
+
+model MedicalAppointment {
+  id                String    @id @default(uuid())
+  healthProfileId   String
+
+  type              String
+  specialty         String?
+  doctorName        String?
+  facility          String?
+
+  scheduledDate     DateTime
+  duration          Int?      // minutos
+
+  status            String    @default("programada")
+  reason            String?   @db.Text
+  notes             String?   @db.Text
+  results           String?   @db.Text
+
+  // Recordatorios
+  reminderSent      Boolean   @default(false)
+  reminderTime      DateTime?
+
+  healthProfile     HealthProfile @relation(fields: [healthProfileId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([healthProfileId, scheduledDate])
+  @@map("medical_appointments")
+}
+
+model HealthMeasurement {
+  id                String    @id @default(uuid())
+  healthProfileId   String
+
+  type              String    // "weight", "blood_pressure", "glucose", etc.
+  value             Json      // Estructura flexible
+  measuredAt        DateTime  @default(now())
+  notes             String?
+
+  healthProfile     HealthProfile @relation(fields: [healthProfileId], references: [id], onDelete: Cascade)
+
+  @@index([healthProfileId, type, measuredAt])
+  @@map("health_measurements")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA FINANCIERO
+// ═══════════════════════════════════════════════════════════
+
+model FinancialProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+
+  currency          String    @default("MXN")
+  fiscalYear        String    @default("calendar")
+
+  // Metas financieras
+  financialGoals    Json?
+
+  // Análisis generado por IA
+  aiAnalysis        Json?
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts          FinancialAccount[]
+  transactions      Transaction[]
+  budgets           Budget[]
+  debts             Debt[]
+  investments       Investment[]
+  recurringPayments RecurringPayment[]
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("financial_profiles")
+}
+
+model FinancialAccount {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+
+  name                String
+  type                String    // "checking", "savings", "credit", "investment"
+  institution         String?
+
+  balance             Decimal   @db.Decimal(15, 2)
+  currency            String    @default("MXN")
+
+  lastSyncDate        DateTime?
+  isActive            Boolean   @default(true)
+
+  // Para tarjetas de crédito
+  creditLimit         Decimal?  @db.Decimal(15, 2)
+  availableCredit     Decimal?  @db.Decimal(15, 2)
+  closingDate         Int?
+  paymentDueDate      Int?
+
+  notes               String?   @db.Text
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+  transactions        Transaction[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId])
+  @@map("financial_accounts")
+}
+
+model Transaction {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+  accountId           String?
+
+  date                DateTime
+  description         String
+  amount              Decimal   @db.Decimal(15, 2)
+  type                String    // "income", "expense", "transfer"
+
+  category            String
+  subcategory         String?
+  tags                Json?
+
+  // Para transferencias
+  fromAccountId       String?
+  toAccountId         String?
+
+  isRecurring         Boolean   @default(false)
+  recurringPaymentId  String?
+
+  notes               String?   @db.Text
+  receipt             String?   // URL
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+  account             FinancialAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId, date])
+  @@index([category, date])
+  @@map("transactions")
+}
+
+model Budget {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+
+  name                String
+  category            String
+  amount              Decimal   @db.Decimal(15, 2)
+  period              String    @default("monthly")
+
+  startDate           DateTime
+  endDate             DateTime?
+
+  alertThreshold      Int       @default(80)
+  alertSent           Boolean   @default(false)
+
+  isActive            Boolean   @default(true)
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId])
+  @@map("budgets")
+}
+
+model Debt {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+
+  name                String
+  type                String
+
+  principal           Decimal   @db.Decimal(15, 2)
+  balance             Decimal   @db.Decimal(15, 2)
+  interestRate        Decimal   @db.Decimal(5, 2)
+
+  monthlyPayment      Decimal   @db.Decimal(15, 2)
+  minimumPayment      Decimal?  @db.Decimal(15, 2)
+
+  startDate           DateTime
+  maturityDate        DateTime?
+  paymentDueDay       Int
+
+  creditor            String
+  accountNumber       String?
+
+  status              String    @default("active")
+  payoffStrategy      String?
+  priority            Int       @default(1)
+
+  notes               String?   @db.Text
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+  payments            DebtPayment[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId])
+  @@map("debts")
+}
+
+model DebtPayment {
+  id                String    @id @default(uuid())
+  debtId            String
+
+  date              DateTime
+  amount            Decimal   @db.Decimal(15, 2)
+  principalPaid     Decimal   @db.Decimal(15, 2)
+  interestPaid      Decimal   @db.Decimal(15, 2)
+
+  notes             String?
+
+  debt              Debt      @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+
+  @@index([debtId, date])
+  @@map("debt_payments")
+}
+
+model Investment {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+
+  name                String
+  type                String
+  symbol              String?
+
+  quantity            Decimal?  @db.Decimal(20, 8)
+  purchasePrice       Decimal   @db.Decimal(15, 2)
+  currentPrice        Decimal?  @db.Decimal(15, 2)
+  currentValue        Decimal?  @db.Decimal(15, 2)
+
+  purchaseDate        DateTime
+  platform            String?
+
+  returns             Decimal?  @db.Decimal(15, 2)
+  returnsPercentage   Decimal?  @db.Decimal(5, 2)
+
+  notes               String?   @db.Text
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId])
+  @@map("investments")
+}
+
+model RecurringPayment {
+  id                  String    @id @default(uuid())
+  financialProfileId  String
+
+  name                String
+  amount              Decimal   @db.Decimal(15, 2)
+  frequency           String
+  category            String
+
+  nextDueDate         DateTime
+  dayOfMonth          Int?
+  dayOfWeek           Int?
+
+  autoDebit           Boolean   @default(false)
+  accountId           String?
+
+  startDate           DateTime
+  endDate             DateTime?
+
+  isActive            Boolean   @default(true)
+  reminderEnabled     Boolean   @default(true)
+  reminderDaysBefore  Int       @default(3)
+
+  notes               String?   @db.Text
+
+  financialProfile    FinancialProfile @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([financialProfileId, nextDueDate])
+  @@map("recurring_payments")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE AGENTES
+// ═══════════════════════════════════════════════════════════
+
+model Agent {
+  id              String                @id @default(uuid())
+  createdBy       String
+
+  name            String
+  slug            String                @unique  // URL-friendly name
+  description     String?               @db.Text
+  category        String                // "personal", "productivity", "creative", etc.
+
+  // Configuración técnica
+  model           String                // "gemini-2.0-flash", etc.
+  config          Json?                 // Configuración específica del agente
+  endpointUrl     String
+  systemPrompt    String?               @db.Text
+
+  // Visibilidad y permisos
+  isPublic        Boolean               @default(false)
+  isActive        Boolean               @default(true)
+
+  // Documentación del agente
+  documentationUrl String?
+  tutorialUrl      String?
+  capabilities     Json?                // Lista de capacidades
+
+  // Estadísticas
+  totalUses       Int                   @default(0)
+  totalMessages   Int                   @default(0)
+  averageRating   Decimal?              @db.Decimal(3, 2)
+
+  creator         User                  @relation("CreatedAgents", fields: [createdBy], references: [id], onDelete: Cascade)
+  conversations   Conversation[]
+  userPermissions UserAgentPermission[]
+  artifacts       Artifact[]
+  usageLogs       UsageLog[]
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([createdBy])
+  @@index([slug])
+  @@index([category])
+  @@map("agents")
+}
+
+model Conversation {
+  id            String      @id @default(uuid())
+  chatSessionId String
+  agentId       String
+
+  title         String
+  summary       String?     @db.Text
+
+  // Metadata
+  messageCount  Int         @default(0)
+  tokenCount    Int         @default(0)
+
+  agent         Agent       @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+  messages      Message[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([agentId])
+  @@index([chatSessionId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+
+  role           String       // 'user' | 'assistant' | 'system'
+  content        String       @db.Text
+
+  // Métricas
+  tokensInput    Int?
+  tokensOutput   Int?
+
+  // Metadata
+  metadata       Json?
+  timestamp      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model ChatSession {
+  id            String         @id @default(uuid())
+  userId        String
+
+  startedAt     DateTime       @default(now())
+  lastActivity  DateTime       @updatedAt
+  metadata      Json?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model UserAgentPermission {
+  id        String   @id @default(uuid())
+  userId    String
+  agentId   String
+  grantedBy String?
+  grantedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, agentId])
+  @@index([userId])
+  @@index([agentId])
+  @@map("user_agent_permissions")
+}
+
+// Sistema de artefactos con versionamiento
+model Artifact {
+  id              String    @id @default(uuid())
+  agentId         String
+  userId          String
+  conversationId  String?
+
+  name            String
+  type            String    // "code", "document", "image", "data"
+  content         String    @db.Text
+
+  // Versionamiento
+  version         Int       @default(1)
+  parentId        String?   // ID del artefacto padre (para versiones)
+
+  // Metadata
+  metadata        Json?
+  tags            Json?
+
+  agent           Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  parent          Artifact? @relation("ArtifactVersions", fields: [parentId], references: [id])
+  versions        Artifact[] @relation("ArtifactVersions")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([agentId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("artifacts")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE MÉTRICAS Y AUDITORÍA
+// ═══════════════════════════════════════════════════════════
+
+model UsageLog {
+  id                String    @id @default(uuid())
+  userId            String
+  agentId           String
+  conversationId    String?
+  messageId         String?
+
+  // Métricas de uso
+  tokensInput       Int
+  tokensOutput      Int
+  totalTokens       Int
+  model             String
+
+  // Costos
+  costInput         Decimal   @db.Decimal(10, 6)
+  costOutput        Decimal   @db.Decimal(10, 6)
+  totalCost         Decimal   @db.Decimal(10, 6)
+
+  // Metadata
+  duration          Int?      // milisegundos
+  success           Boolean   @default(true)
+  errorMessage      String?
+
+  timestamp         DateTime  @default(now())
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent             Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@index([agentId, timestamp])
+  @@map("usage_logs")
+}
+
+model MonthlyUsage {
+  id                String    @id @default(uuid())
+  userId            String
+  year              Int
+  month             Int
+
+  // Totales
+  totalMessages     Int
+  totalTokens       BigInt
+  totalCost         Decimal   @db.Decimal(10, 2)
+
+  // Por agente
+  agentUsage        Json
+
+  // Límites del mes
+  limitMessages     Int?
+  limitTokens       BigInt?
+
+  // Estado
+  exceededLimit     Boolean   @default(false)
+  warningsSent      Int       @default(0)
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([userId, year, month])
+  @@index([userId])
+  @@map("monthly_usage")
+}
+
+model UsageAlert {
+  id                String    @id @default(uuid())
+  userId            String
+  type              AlertType
+  threshold         Int       // Porcentaje
+  triggered         Boolean   @default(false)
+  resolvedAt        DateTime?
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+
+  @@index([userId])
+  @@map("usage_alerts")
+}
+
+enum AlertType {
+  APPROACHING_LIMIT
+  LIMIT_WARNING
+  LIMIT_EXCEEDED
+  UNUSUAL_ACTIVITY
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String   // "INVITE_USER", "DELETE_USER", "CHANGE_ROLE"
+  targetId    String?
+  details     Json?
+  ipAddress   String?
+  timestamp   DateTime @default(now())
+
+  admin       User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
