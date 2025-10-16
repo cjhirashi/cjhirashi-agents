@@ -18,10 +18,9 @@ export async function GET(
         email: true,
         name: true,
         subscriptionTier: true,
-        monthlyMessageLimit: true,
-        monthlyTokenLimit: true,
-        currentMonthMessages: true,
-        currentMonthTokens: true,
+        customLimits: true,
+        monthlyMessages: true,
+        monthlyTokens: true,
       },
     });
 
@@ -29,7 +28,12 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({
+      user: {
+        ...user,
+        monthlyTokens: user.monthlyTokens.toString(),
+      }
+    });
   } catch (error) {
     console.error("Error fetching user limits:", error);
     return NextResponse.json(
@@ -62,23 +66,26 @@ export async function PATCH(
     // Construir el objeto de actualización
     const updateData: {
       subscriptionTier?: SubscriptionTier;
-      monthlyMessageLimit?: number | null;
-      monthlyTokenLimit?: bigint | null;
+      customLimits?: any;
     } = {};
 
     if (subscriptionTier !== undefined) {
       updateData.subscriptionTier = subscriptionTier as SubscriptionTier;
     }
 
+    // Actualizar customLimits con los nuevos valores
+    const currentLimits = existingUser.customLimits as any || {};
+    const newCustomLimits = { ...currentLimits };
+
     if (monthlyMessageLimit !== undefined) {
-      // null = ilimitado
-      updateData.monthlyMessageLimit = monthlyMessageLimit === null ? null : parseInt(monthlyMessageLimit);
+      newCustomLimits.monthlyMessageLimit = monthlyMessageLimit === null ? null : parseInt(monthlyMessageLimit);
     }
 
     if (monthlyTokenLimit !== undefined) {
-      // null = ilimitado
-      updateData.monthlyTokenLimit = monthlyTokenLimit === null ? null : BigInt(monthlyTokenLimit);
+      newCustomLimits.monthlyTokenLimit = monthlyTokenLimit === null ? null : monthlyTokenLimit;
     }
+
+    updateData.customLimits = newCustomLimits;
 
     const user = await prisma.user.update({
       where: { id: params.userId },
@@ -88,10 +95,9 @@ export async function PATCH(
         email: true,
         name: true,
         subscriptionTier: true,
-        monthlyMessageLimit: true,
-        monthlyTokenLimit: true,
-        currentMonthMessages: true,
-        currentMonthTokens: true,
+        customLimits: true,
+        monthlyMessages: true,
+        monthlyTokens: true,
       },
     });
 
@@ -99,8 +105,7 @@ export async function PATCH(
       user: {
         ...user,
         // Convertir BigInt a string para JSON
-        monthlyTokenLimit: user.monthlyTokenLimit?.toString() || null,
-        currentMonthTokens: user.currentMonthTokens.toString(),
+        monthlyTokens: user.monthlyTokens.toString(),
       }
     });
   } catch (error) {

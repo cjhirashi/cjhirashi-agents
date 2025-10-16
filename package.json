@@ -9,6 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "set-admin": "tsx scripts/set-admin.ts",
+    "set-super-admin": "node scripts/set-super-admin.js",
     "seed-models": "tsx scripts/seed-models.ts"
   },
   "dependencies": {

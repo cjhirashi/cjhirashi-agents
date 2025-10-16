@@ -102,7 +102,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative flex h-screen flex-col border-r bg-background transition-all duration-300",
+        "relative flex h-screen flex-col border-r bg-card transition-all duration-300",
         collapsed ? "w-16" : "w-64",
         className
       )}
@@ -196,7 +196,7 @@ export function Sidebar({ className }: SidebarProps) {
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={session.user.image || undefined} />
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white">
                     {getInitials(session.user.name)}
                   </AvatarFallback>
                 </Avatar>

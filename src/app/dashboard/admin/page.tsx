@@ -81,7 +81,7 @@ type Invitation = {
 };
 
 export default function AdminPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -96,6 +96,9 @@ export default function AdminPage() {
   const [isMetricsDialogOpen, setIsMetricsDialogOpen] = useState(false);
   const [selectedMetricsUserId, setSelectedMetricsUserId] = useState<string | null>(null);
   const [selectedMetricsUserName, setSelectedMetricsUserName] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [isAgentsListDialogOpen, setIsAgentsListDialogOpen] = useState(false);
+  const [selectedUserAgents, setSelectedUserAgents] = useState<User | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -127,6 +130,14 @@ export default function AdminPage() {
       setUsers(usersData.users || []);
       setAgents(agentsData.agents || []);
       setInvitations(invitationsData.invitations || []);
+
+      // Obtener el rol del usuario actual
+      if (session?.user?.email) {
+        const currentUser = usersData.users.find(
+          (u: User) => u.email === session.user.email
+        );
+        setCurrentUserRole(currentUser?.role || null);
+      }
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -305,6 +316,30 @@ export default function AdminPage() {
     setIsMetricsDialogOpen(true);
   };
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "Super Admin";
+      case "ADMIN":
+        return "Admin";
+      case "MANAGER":
+        return "Manager";
+      case "DEVELOPER":
+        return "Developer";
+      case "USER":
+        return "Usuario";
+      case "GUEST":
+        return "Invitado";
+      default:
+        return role;
+    }
+  };
+
+  const openAgentsListDialog = (user: User) => {
+    setSelectedUserAgents(user);
+    setIsAgentsListDialogOpen(true);
+  };
+
   const deleteUser = async (userId: string, userName: string | null, userEmail: string | null) => {
     const displayName = userName || userEmail || "este usuario";
 
@@ -361,16 +396,25 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1.5 glass-card glass-shadow rounded-xl">
+          <TabsTrigger
+            value="users"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=inactive]:text-muted-foreground transition-all duration-300 py-3 px-4 rounded-lg font-semibold hover:bg-accent/50"
+          >
             <Users className="h-4 w-4 mr-2" />
             Usuarios
           </TabsTrigger>
-          <TabsTrigger value="agents">
+          <TabsTrigger
+            value="agents"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=inactive]:text-muted-foreground transition-all duration-300 py-3 px-4 rounded-lg font-semibold hover:bg-accent/50"
+          >
             <Bot className="h-4 w-4 mr-2" />
             Agentes
           </TabsTrigger>
-          <TabsTrigger value="invitations">
+          <TabsTrigger
+            value="invitations"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xl data-[state=inactive]:text-muted-foreground transition-all duration-300 py-3 px-4 rounded-lg font-semibold hover:bg-accent/50"
+          >
             <Mail className="h-4 w-4 mr-2" />
             Invitaciones
           </TabsTrigger>
@@ -402,55 +446,72 @@ export default function AdminPage() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Select
-                          value={user.role}
-                          onValueChange={(value) => updateUserRole(user.id, value)}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USER">Usuario</SelectItem>
-                            <SelectItem value="ADMIN">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {/* Solo SUPER_ADMIN puede editar roles, excepto su propio rol */}
+                        {currentUserRole === "SUPER_ADMIN" && session?.user?.email !== user.email ? (
+                          <Select
+                            value={user.role}
+                            onValueChange={(value) => updateUserRole(user.id, value)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USER">Usuario</SelectItem>
+                              <SelectItem value="ADMIN">Admin</SelectItem>
+                              <SelectItem value="DEVELOPER">Developer</SelectItem>
+                              <SelectItem value="MANAGER">Manager</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge variant={user.role === "SUPER_ADMIN" ? "default" : "secondary"}>
+                            {getRoleLabel(user.role)}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
-                          variant={user.isActive ? "default" : "outline"}
+                          variant="ghost"
                           size="sm"
                           onClick={() => toggleUserActive(user.id, !user.isActive)}
+                          className="hover:bg-transparent p-0"
                         >
-                          {user.isActive ? (
-                            <>
-                              <Check className="h-4 w-4 mr-1" />
-                              Activo
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-4 w-4 mr-1" />
-                              Inactivo
-                            </>
-                          )}
+                          <Badge
+                            variant={user.isActive ? "default" : "destructive"}
+                            className={user.isActive ? "bg-green-500 hover:bg-green-600 cursor-pointer" : "cursor-pointer"}
+                          >
+                            {user.isActive ? (
+                              <>
+                                <Check className="h-3 w-3 mr-1" />
+                                Activo
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3 mr-1" />
+                                Inactivo
+                              </>
+                            )}
+                          </Badge>
                         </Button>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.agentPermissions.length > 0 ? (
-                            user.agentPermissions.map((perm) => (
-                              <Badge key={perm.id} variant="secondary">
-                                {perm.agent.name}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              Sin permisos
-                            </span>
-                          )}
-                        </div>
+                        {user.agentPermissions.length > 0 ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openAgentsListDialog(user)}
+                          >
+                            <Bot className="h-4 w-4 mr-1" />
+                            {user.agentPermissions.length} {user.agentPermissions.length === 1 ? 'Agente' : 'Agentes'}
+                          </Button>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            Sin agentes
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-2">
+                          {/* Ver Métricas - Siempre visible */}
                           <Button
                             variant="default"
                             size="sm"
@@ -460,67 +521,75 @@ export default function AdminPage() {
                             <BarChart3 className="h-4 w-4 mr-1" />
                             Ver Métricas
                           </Button>
-                          <Dialog
-                            open={isPermissionDialogOpen && selectedUser?.id === user.id}
-                            onOpenChange={(open) => {
-                              setIsPermissionDialogOpen(open);
-                              if (open) setSelectedUser(user);
-                            }}
-                          >
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="w-full">
-                                Gestionar Permisos
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Permisos de {user.name}</DialogTitle>
-                                <DialogDescription>
-                                  Selecciona los agentes a los que tiene acceso
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-2 mt-4">
-                                {agents.map((agent) => {
-                                  const hasAccess = user.agentPermissions.some(
-                                    (p) => p.agent.id === agent.id
-                                  );
-                                  return (
-                                    <div
-                                      key={agent.id}
-                                      className="flex items-center justify-between p-3 border rounded"
-                                    >
-                                      <div>
-                                        <p className="font-medium">{agent.name}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                          {agent.description || "Sin descripción"}
-                                        </p>
-                                      </div>
-                                      <Button
-                                        variant={hasAccess ? "destructive" : "default"}
-                                        size="sm"
-                                        onClick={() =>
-                                          hasAccess
-                                            ? revokePermission(user.id, agent.id)
-                                            : grantPermission(user.id, agent.id)
-                                        }
+
+                          {/* Gestionar Permisos - Solo si NO es el propio usuario */}
+                          {session?.user?.email !== user.email && (
+                            <Dialog
+                              open={isPermissionDialogOpen && selectedUser?.id === user.id}
+                              onOpenChange={(open) => {
+                                setIsPermissionDialogOpen(open);
+                                if (open) setSelectedUser(user);
+                              }}
+                            >
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full">
+                                  Gestionar Permisos
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Permisos de {user.name}</DialogTitle>
+                                  <DialogDescription>
+                                    Selecciona los agentes a los que tiene acceso
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-2 mt-4">
+                                  {agents.map((agent) => {
+                                    const hasAccess = user.agentPermissions.some(
+                                      (p) => p.agent.id === agent.id
+                                    );
+                                    return (
+                                      <div
+                                        key={agent.id}
+                                        className="flex items-center justify-between p-3 border rounded"
                                       >
-                                        {hasAccess ? "Revocar" : "Conceder"}
-                                      </Button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => deleteUser(user.id, user.name, user.email)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Eliminar
-                          </Button>
+                                        <div>
+                                          <p className="font-medium">{agent.name}</p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {agent.description || "Sin descripción"}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant={hasAccess ? "destructive" : "default"}
+                                          size="sm"
+                                          onClick={() =>
+                                            hasAccess
+                                              ? revokePermission(user.id, agent.id)
+                                              : grantPermission(user.id, agent.id)
+                                          }
+                                        >
+                                          {hasAccess ? "Revocar" : "Conceder"}
+                                        </Button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          {/* Eliminar - Solo si NO es el propio usuario Y es SUPER_ADMIN */}
+                          {session?.user?.email !== user.email && currentUserRole === "SUPER_ADMIN" && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => deleteUser(user.id, user.name, user.email)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Eliminar
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -736,6 +805,51 @@ export default function AdminPage() {
           setSelectedMetricsUserName(null);
         }}
       />
+
+      {/* Dialog para lista de agentes */}
+      <Dialog open={isAgentsListDialogOpen} onOpenChange={setIsAgentsListDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Agentes de {selectedUserAgents?.name || "Usuario"}
+            </DialogTitle>
+            <DialogDescription>
+              Lista de agentes a los que tiene acceso este usuario
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {selectedUserAgents && selectedUserAgents.agentPermissions.length > 0 ? (
+              selectedUserAgents.agentPermissions.map((perm) => (
+                <div
+                  key={perm.id}
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-muted-foreground" />
+                      <p className="font-medium">{perm.agent.name}</p>
+                    </div>
+                    {perm.agent.description && (
+                      <p className="text-sm text-muted-foreground mt-1 ml-6">
+                        {perm.agent.description}
+                      </p>
+                    )}
+                  </div>
+                  <Badge variant="secondary">
+                    Acceso concedido
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>Este usuario no tiene acceso a ningún agente</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

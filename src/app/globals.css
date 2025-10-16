@@ -8,42 +8,50 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 189 94% 43%;
+    --primary: 263 70% 60%; /* Púrpura principal */
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
+    --secondary: 320 60% 70%; /* Rosa pastel */
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 260 50% 95%; /* Púrpura muy claro */
+    --accent-foreground: 263 70% 40%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 189 94% 43%;
-    --radius: 0.5rem;
+    --ring: 263 70% 60%;
+    --radius: 0.75rem;
+    --chart-1: 263 70% 70%; /* Púrpura claro para gráficas */
+    --chart-2: 320 60% 70%; /* Rosa pastel para gráficas */
+    --chart-3: 280 65% 75%; /* Violeta claro */
+    --chart-4: 300 60% 80%; /* Rosa muy claro */
   }
 
   .dark {
-    --background: 0 0% 0%;
+    --background: 210 18% 15%; /* Fondo oscuro #1e272e */
     --foreground: 0 0% 98%;
-    --card: 0 0% 6.7%;
+    --card: 210 11% 24%; /* Cards/navbar/sidebar #374149 */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6.7%;
+    --popover: 210 11% 24%;
     --popover-foreground: 0 0% 98%;
-    --primary: 189 94% 43%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary: 263 70% 65%; /* Púrpura #9D7BE6 */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 320 60% 70%; /* Rosa pastel #E89CC8 */
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 210 11% 28%; /* Gris oscuro para elementos mutados */
+    --muted-foreground: 0 0% 60%;
+    --accent: 210 11% 28%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 189 94% 43%;
+    --border: 210 11% 30%; /* Bordes sutiles */
+    --input: 210 11% 28%;
+    --ring: 263 70% 65%;
+    --chart-1: 263 60% 70%; /* Púrpura claro para gráficas #A594F9 */
+    --chart-2: 320 50% 75%; /* Rosa pastel para gráficas #E8B4D9 */
+    --chart-3: 280 55% 72%; /* Violeta medio #C4B5FD */
+    --chart-4: 300 50% 78%; /* Rosa muy claro #F0C4E1 */
   }
 
   * {
@@ -53,5 +61,41 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  /* Glassmorphism effect for cards */
+  .glass-card {
+    background: hsla(var(--card), 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsla(var(--border), 0.2);
+  }
+
+  /* Enhanced glassmorphism for dark mode - Igual a la imagen */
+  .dark .glass-card {
+    background: hsl(210, 11%, 24%); /* Gris azulado sólido #374149 */
+    border: 1px solid hsla(210, 11%, 32%, 0.4);
+  }
+
+  /* Gradient background for charts */
+  .chart-gradient-purple {
+    background: linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(var(--chart-2)) 100%);
+  }
+
+  /* Subtle shadow for elevated elements */
+  .glass-shadow {
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+
+  .dark .glass-shadow {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Card hover effect */
+  .glass-card:hover {
+    border-color: hsla(var(--primary), 0.3);
+    transition: border-color 0.3s ease;
   }
 }

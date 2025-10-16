@@ -18,10 +18,9 @@ export async function GET(
         email: true,
         name: true,
         subscriptionTier: true,
-        monthlyMessageLimit: true,
-        monthlyTokenLimit: true,
-        currentMonthMessages: true,
-        currentMonthTokens: true,
+        customLimits: true,
+        monthlyMessages: true,
+        monthlyTokens: true,
         createdAt: true,
       },
     });
@@ -137,13 +136,29 @@ export async function GET(
       ),
     }));
 
+    // Obtener límites según tier de suscripción o customLimits
+    const tierLimits: Record<string, { messages: number | null; tokens: number | null }> = {
+      FREE: { messages: 100, tokens: 100000 },
+      BASIC: { messages: 500, tokens: 500000 },
+      PRO: { messages: 1000, tokens: 1000000 },
+      ENTERPRISE: { messages: 10000, tokens: 10000000 },
+      CUSTOM: { messages: null, tokens: null },
+      UNLIMITED: { messages: null, tokens: null },
+    };
+
+    const customLimits = user.customLimits as any;
+    const defaultLimits = tierLimits[user.subscriptionTier] || tierLimits.FREE;
+
+    const monthlyMessageLimit = customLimits?.monthlyMessageLimit ?? defaultLimits.messages;
+    const monthlyTokenLimit = customLimits?.monthlyTokenLimit ?? defaultLimits.tokens;
+
     // Calcular porcentaje de uso de límites
-    const messageLimitPercentage = user.monthlyMessageLimit
-      ? (user.currentMonthMessages / user.monthlyMessageLimit) * 100
+    const messageLimitPercentage = monthlyMessageLimit
+      ? (user.monthlyMessages / monthlyMessageLimit) * 100
       : 0;
 
-    const tokenLimitPercentage = user.monthlyTokenLimit
-      ? (Number(user.currentMonthTokens) / Number(user.monthlyTokenLimit)) * 100
+    const tokenLimitPercentage = monthlyTokenLimit
+      ? (Number(user.monthlyTokens) / Number(monthlyTokenLimit)) * 100
       : 0;
 
     return NextResponse.json({
@@ -155,10 +170,10 @@ export async function GET(
         createdAt: user.createdAt,
       },
       limits: {
-        monthlyMessageLimit: user.monthlyMessageLimit,
-        monthlyTokenLimit: user.monthlyTokenLimit?.toString() || null,
-        currentMonthMessages: user.currentMonthMessages,
-        currentMonthTokens: user.currentMonthTokens.toString(),
+        monthlyMessageLimit,
+        monthlyTokenLimit: monthlyTokenLimit?.toString() || null,
+        currentMonthMessages: user.monthlyMessages,
+        currentMonthTokens: user.monthlyTokens.toString(),
         messageLimitPercentage: Math.round(messageLimitPercentage),
         tokenLimitPercentage: Math.round(tokenLimitPercentage),
       },

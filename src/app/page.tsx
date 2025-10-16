@@ -3,30 +3,10 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col ">
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-4">
-        <div className="text-center space-y-6 max-w-2xl">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Hub de Agentes IA
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Interfaz elegante para interactuar con agentes multimodales
-            desarrollados con ADK de Google
-          </p>
-          <div className="flex gap-4 justify-center pt-4">
-            <Link href="/dashboard">
-              <Button size="lg" className="font-semibold">
-                Comenzar
-              </Button>
-            </Link>
-            <Link href="/docs">
-              <Button size="lg" variant="outline" className="font-semibold">
-                Documentación
-              </Button>
-            </Link>
-          </div>
-        </div>
+      <main className="flex-1 flex items-center justify-center p-4 ">
+        
       </main>
 
       {/* Footer */}

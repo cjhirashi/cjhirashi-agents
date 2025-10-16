@@ -28,11 +28,11 @@ export async function getCurrentUser() {
 }
 
 /**
- * Check if the current user is an admin
+ * Check if the current user is an admin (ADMIN or SUPER_ADMIN)
  */
 export async function isAdmin() {
   const user = await getCurrentUser();
-  return user?.role === UserRole.ADMIN;
+  return user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
 }
 
 /**
@@ -43,8 +43,8 @@ export async function hasAgentAccess(agentId: string) {
 
   if (!user) return false;
 
-  // Admins have access to all agents
-  if (user.role === UserRole.ADMIN) return true;
+  // Admins and Super Admins have access to all agents
+  if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) return true;
 
   // Check if agent is public
   const agent = await prisma.agent.findUnique({
@@ -72,8 +72,8 @@ export async function getAccessibleAgents() {
 
   if (!user) return [];
 
-  // Admins have access to all agents
-  if (user.role === UserRole.ADMIN) {
+  // Admins and Super Admins have access to all agents
+  if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
     return await prisma.agent.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -98,11 +98,14 @@ export async function getAccessibleAgents() {
 
 /**
  * Require admin role or throw error
+ * Returns the user object if successful
  */
 export async function requireAdmin() {
-  const admin = await isAdmin();
+  const user = await getCurrentUser();
 
-  if (!admin) {
+  if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN)) {
     throw new Error("Unauthorized: Admin access required");
   }
+
+  return user;
 }
