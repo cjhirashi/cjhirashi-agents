@@ -28,9 +28,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Bot, Check, X, Globe } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield, Users, Bot, Check, X, Globe, Mail, Plus, Trash2, Clock, BarChart3 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { UserMetricsDialog } from "@/components/admin/UserMetricsDialog";
 
 type User = {
   id: string;
@@ -63,14 +66,36 @@ type Agent = {
   };
 };
 
+type Invitation = {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expiresAt: string;
+  createdAt: string;
+  inviter: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  };
+};
+
 export default function AdminPage() {
   const { status } = useSession();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [newInviteEmail, setNewInviteEmail] = useState("");
+  const [newInviteRole, setNewInviteRole] = useState("USER");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [isMetricsDialogOpen, setIsMetricsDialogOpen] = useState(false);
+  const [selectedMetricsUserId, setSelectedMetricsUserId] = useState<string | null>(null);
+  const [selectedMetricsUserName, setSelectedMetricsUserName] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -85,20 +110,23 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      const [usersRes, agentsRes] = await Promise.all([
+      const [usersRes, agentsRes, invitationsRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/admin/agents"),
+        fetch("/api/admin/invitations"),
       ]);
 
-      if (!usersRes.ok || !agentsRes.ok) {
+      if (!usersRes.ok || !agentsRes.ok || !invitationsRes.ok) {
         throw new Error("Failed to fetch data");
       }
 
       const usersData = await usersRes.json();
       const agentsData = await agentsRes.json();
+      const invitationsData = await invitationsRes.json();
 
       setUsers(usersData.users || []);
       setAgents(agentsData.agents || []);
+      setInvitations(invitationsData.invitations || []);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -185,6 +213,133 @@ export default function AdminPage() {
     }
   };
 
+  const createInvitation = async () => {
+    if (!newInviteEmail.trim()) {
+      alert("Por favor ingresa un email válido");
+      return;
+    }
+
+    setInviteLoading(true);
+    try {
+      const res = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newInviteEmail,
+          role: newInviteRole,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Error al crear la invitación");
+        return;
+      }
+
+      setNewInviteEmail("");
+      setNewInviteRole("USER");
+      setIsInviteDialogOpen(false);
+      await loadData();
+      alert("Invitación creada exitosamente");
+    } catch (error) {
+      console.error("Error creating invitation:", error);
+      alert("Error al crear la invitación");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const cancelInvitation = async (invitationId: string) => {
+    if (!confirm("¿Estás seguro de que deseas cancelar esta invitación?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/invitations?id=${invitationId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to cancel invitation");
+
+      await loadData();
+    } catch (error) {
+      console.error("Error cancelling invitation:", error);
+      alert("Error al cancelar la invitación");
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "default";
+      case "ACCEPTED":
+        return "secondary";
+      case "EXPIRED":
+        return "outline";
+      case "CANCELLED":
+        return "destructive";
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Pendiente";
+      case "ACCEPTED":
+        return "Aceptada";
+      case "EXPIRED":
+        return "Expirada";
+      case "CANCELLED":
+        return "Cancelada";
+      default:
+        return status;
+    }
+  };
+
+  const openMetricsDialog = (userId: string, userName: string | null) => {
+    setSelectedMetricsUserId(userId);
+    setSelectedMetricsUserName(userName);
+    setIsMetricsDialogOpen(true);
+  };
+
+  const deleteUser = async (userId: string, userName: string | null, userEmail: string | null) => {
+    const displayName = userName || userEmail || "este usuario";
+
+    if (!confirm(
+      `⚠️ ADVERTENCIA: Esta acción NO se puede deshacer.\n\n` +
+      `Se eliminará permanentemente a ${displayName} y toda su información:\n` +
+      `- Perfil de usuario\n` +
+      `- Agentes creados\n` +
+      `- Conversaciones y mensajes\n` +
+      `- Permisos y configuraciones\n\n` +
+      `¿Estás seguro de que deseas continuar?`
+    )) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/users?userId=${userId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Error al eliminar el usuario");
+        return;
+      }
+
+      alert(`Usuario ${displayName} eliminado exitosamente`);
+      await loadData();
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Error al eliminar el usuario");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -214,6 +369,10 @@ export default function AdminPage() {
           <TabsTrigger value="agents">
             <Bot className="h-4 w-4 mr-2" />
             Agentes
+          </TabsTrigger>
+          <TabsTrigger value="invitations">
+            <Mail className="h-4 w-4 mr-2" />
+            Invitaciones
           </TabsTrigger>
         </TabsList>
 
@@ -291,58 +450,78 @@ export default function AdminPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Dialog
-                          open={isPermissionDialogOpen && selectedUser?.id === user.id}
-                          onOpenChange={(open) => {
-                            setIsPermissionDialogOpen(open);
-                            if (open) setSelectedUser(user);
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Gestionar Permisos
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Permisos de {user.name}</DialogTitle>
-                              <DialogDescription>
-                                Selecciona los agentes a los que tiene acceso
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-2 mt-4">
-                              {agents.map((agent) => {
-                                const hasAccess = user.agentPermissions.some(
-                                  (p) => p.agent.id === agent.id
-                                );
-                                return (
-                                  <div
-                                    key={agent.id}
-                                    className="flex items-center justify-between p-3 border rounded"
-                                  >
-                                    <div>
-                                      <p className="font-medium">{agent.name}</p>
-                                      <p className="text-sm text-muted-foreground">
-                                        {agent.description || "Sin descripción"}
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant={hasAccess ? "destructive" : "default"}
-                                      size="sm"
-                                      onClick={() =>
-                                        hasAccess
-                                          ? revokePermission(user.id, agent.id)
-                                          : grantPermission(user.id, agent.id)
-                                      }
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => openMetricsDialog(user.id, user.name)}
+                          >
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Ver Métricas
+                          </Button>
+                          <Dialog
+                            open={isPermissionDialogOpen && selectedUser?.id === user.id}
+                            onOpenChange={(open) => {
+                              setIsPermissionDialogOpen(open);
+                              if (open) setSelectedUser(user);
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="w-full">
+                                Gestionar Permisos
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Permisos de {user.name}</DialogTitle>
+                                <DialogDescription>
+                                  Selecciona los agentes a los que tiene acceso
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-2 mt-4">
+                                {agents.map((agent) => {
+                                  const hasAccess = user.agentPermissions.some(
+                                    (p) => p.agent.id === agent.id
+                                  );
+                                  return (
+                                    <div
+                                      key={agent.id}
+                                      className="flex items-center justify-between p-3 border rounded"
                                     >
-                                      {hasAccess ? "Revocar" : "Conceder"}
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                                      <div>
+                                        <p className="font-medium">{agent.name}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                          {agent.description || "Sin descripción"}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant={hasAccess ? "destructive" : "default"}
+                                        size="sm"
+                                        onClick={() =>
+                                          hasAccess
+                                            ? revokePermission(user.id, agent.id)
+                                            : grantPermission(user.id, agent.id)
+                                        }
+                                      >
+                                        {hasAccess ? "Revocar" : "Conceder"}
+                                      </Button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => deleteUser(user.id, user.name, user.email)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Eliminar
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -416,7 +595,147 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="invitations" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Invitaciones de Usuario</CardTitle>
+                <CardDescription>
+                  Envía invitaciones por email para que nuevos usuarios se registren
+                </CardDescription>
+              </div>
+              <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nueva Invitación
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Enviar Invitación</DialogTitle>
+                    <DialogDescription>
+                      Ingresa el email del usuario que deseas invitar
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="usuario@ejemplo.com"
+                        value={newInviteEmail}
+                        onChange={(e) => setNewInviteEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Rol</Label>
+                      <Select value={newInviteRole} onValueChange={setNewInviteRole}>
+                        <SelectTrigger id="role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USER">Usuario</SelectItem>
+                          <SelectItem value="ADMIN">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={createInvitation}
+                      disabled={inviteLoading}
+                    >
+                      {inviteLoading ? "Enviando..." : "Enviar Invitación"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              {invitations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No hay invitaciones registradas.
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Invitado por</TableHead>
+                      <TableHead>Expira</TableHead>
+                      <TableHead>Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invitations.map((invitation) => {
+                      const isExpired = new Date(invitation.expiresAt) < new Date();
+                      const isPending = invitation.status === "PENDING";
+
+                      return (
+                        <TableRow key={invitation.id}>
+                          <TableCell className="font-medium">
+                            {invitation.email}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {invitation.role === "ADMIN" ? "Admin" : "Usuario"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(invitation.status) as any}>
+                              {getStatusLabel(invitation.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {invitation.inviter.name || invitation.inviter.email}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span className="text-sm">
+                                {isExpired
+                                  ? "Expirada"
+                                  : new Date(invitation.expiresAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {isPending && !isExpired && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => cancelInvitation(invitation.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Cancelar
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      <UserMetricsDialog
+        userId={selectedMetricsUserId}
+        userName={selectedMetricsUserName}
+        isOpen={isMetricsDialogOpen}
+        onClose={() => {
+          setIsMetricsDialogOpen(false);
+          setSelectedMetricsUserId(null);
+          setSelectedMetricsUserName(null);
+        }}
+      />
     </div>
   );
 }

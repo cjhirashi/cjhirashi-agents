@@ -82,3 +82,68 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// DELETE /api/admin/users - Delete user (GDPR compliance)
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await requireAdmin();
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    }
+
+    // Verificar que el usuario existe
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // No permitir eliminar al propio usuario que está ejecutando la acción
+    if (session.user.id === userId) {
+      return NextResponse.json(
+        { error: "Cannot delete your own account from admin panel" },
+        { status: 400 }
+      );
+    }
+
+    // Eliminar el usuario (las relaciones en cascade se encargan del resto)
+    // Prisma eliminará automáticamente:
+    // - Accounts
+    // - Sessions
+    // - ChatSessions y sus Conversations/Messages
+    // - AgentPermissions
+    // - Invitations enviadas
+    // - Agents creados (esto eliminará también sus conversaciones)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `User ${user.email} and all associated data has been permanently deleted`,
+      deletedUser: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete user" },
+      { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
+    );
+  }
+}
