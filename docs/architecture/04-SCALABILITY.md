@@ -736,6 +736,261 @@ const worker = new Worker(
 );
 ```
 
+### Optimización de Visualizaciones de Datos
+
+> **⚠️ REQUISITO CRÍTICO**: Todas las métricas y estadísticas en la aplicación DEBEN incluir gráficos visuales. Esta sección documenta cómo optimizar el rendimiento de estas visualizaciones.
+
+**Estrategias de Optimización para Charts**:
+
+```typescript
+// components/charts/optimized-chart.tsx
+import { memo, useMemo } from "react";
+import dynamic from "next/dynamic";
+import { AreaChart, Area, XAxis, YAxis } from "recharts";
+
+// 1. LAZY LOADING: Cargar librería de charts solo cuando sea visible
+const LazyChart = dynamic(() => import("./chart-component"), {
+  loading: () => <ChartSkeleton />,
+  ssr: false, // No renderizar charts en servidor
+});
+
+// 2. MEMOIZATION: Evitar re-renders innecesarios
+export const OptimizedChart = memo(({ data }: { data: ChartData[] }) => {
+  // 3. PROCESAMIENTO OPTIMIZADO: Calcular datos una sola vez
+  const processedData = useMemo(() => {
+    return data.map((item) => ({
+      ...item,
+      value: Math.round(item.value * 100) / 100, // Redondear
+    }));
+  }, [data]);
+
+  return (
+    <AreaChart data={processedData} width={500} height={300}>
+      <Area
+        type="monotone"
+        dataKey="value"
+        stroke="#2563eb"
+        fill="#3b82f6"
+        isAnimationActive={false} // Desactivar animaciones en datasets grandes
+      />
+    </AreaChart>
+  );
+});
+```
+
+**Virtualización para Datasets Grandes**:
+
+```typescript
+// components/charts/virtualized-chart.tsx
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useRef } from "react";
+
+export function VirtualizedChartList({ data }: { data: ChartData[] }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  // Solo renderizar charts visibles en viewport
+  const virtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 400, // Altura estimada de cada chart
+    overscan: 2, // Renderizar 2 items extra fuera de vista
+  });
+
+  return (
+    <div ref={parentRef} style={{ height: "600px", overflow: "auto" }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => (
+          <div
+            key={virtualRow.index}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            <ChartComponent data={data[virtualRow.index]} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**Debouncing para Filtros Interactivos**:
+
+```typescript
+// hooks/useChartFilters.ts
+import { useState, useEffect } from "react";
+import { useDebouncedCallback } from "use-debounce";
+
+export function useChartFilters(data: ChartData[]) {
+  const [filteredData, setFilteredData] = useState(data);
+  const [filterValue, setFilterValue] = useState("");
+
+  // Debounce para evitar procesar filtros en cada tecla
+  const debouncedFilter = useDebouncedCallback((value: string) => {
+    const filtered = data.filter((item) =>
+      item.category.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredData(filtered);
+  }, 300); // Esperar 300ms después de la última tecla
+
+  return {
+    filteredData,
+    filterValue,
+    setFilterValue: (value: string) => {
+      setFilterValue(value);
+      debouncedFilter(value);
+    },
+  };
+}
+```
+
+**Web Workers para Cálculos Complejos**:
+
+```typescript
+// workers/chart-processor.worker.ts
+// Este worker procesa datos pesados sin bloquear el UI thread
+self.addEventListener("message", (e) => {
+  const { data, operation } = e.data;
+
+  let result;
+  switch (operation) {
+    case "aggregate":
+      result = aggregateData(data);
+      break;
+    case "calculate-trends":
+      result = calculateTrends(data);
+      break;
+    case "generate-insights":
+      result = generateInsights(data);
+      break;
+  }
+
+  self.postMessage(result);
+});
+
+function aggregateData(data: any[]) {
+  // Procesamiento intensivo de datos
+  return data.reduce((acc, item) => {
+    // ... lógica compleja
+    return acc;
+  }, []);
+}
+```
+
+```typescript
+// hooks/useChartWorker.ts
+import { useEffect, useState } from "react";
+
+export function useChartWorker(data: any[], operation: string) {
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Crear worker para procesamiento en background
+    const worker = new Worker(
+      new URL("../workers/chart-processor.worker.ts", import.meta.url)
+    );
+
+    worker.postMessage({ data, operation });
+
+    worker.onmessage = (e) => {
+      setResult(e.data);
+      setLoading(false);
+    };
+
+    return () => worker.terminate();
+  }, [data, operation]);
+
+  return { result, loading };
+}
+```
+
+**Progressive Loading para Datos Históricos**:
+
+```typescript
+// components/charts/progressive-chart.tsx
+import { useState, useEffect } from "react";
+
+export function ProgressiveChart({ userId }: { userId: string }) {
+  const [data, setData] = useState<ChartData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 1. Cargar datos recientes primero (últimos 30 días)
+    fetch(`/api/metrics/${userId}?range=30d`)
+      .then((res) => res.json())
+      .then((recentData) => {
+        setData(recentData);
+        setLoading(false);
+
+        // 2. Cargar datos históricos en background
+        return fetch(`/api/metrics/${userId}?range=1y`);
+      })
+      .then((res) => res.json())
+      .then((historicalData) => {
+        setData(historicalData); // Actualizar con datos completos
+      });
+  }, [userId]);
+
+  return (
+    <div>
+      {loading && <ChartSkeleton />}
+      <AreaChart data={data}>{/* ... */}</AreaChart>
+      {loading && <p className="text-sm text-muted">Cargando histórico...</p>}
+    </div>
+  );
+}
+```
+
+**Caching de Datos Procesados**:
+
+```typescript
+// lib/cache/chart-data.ts
+import { getCached, CACHE_TTL } from "./redis";
+
+export async function getCachedChartData(
+  userId: string,
+  chartType: string,
+  timeRange: string
+) {
+  const cacheKey = `chart:${userId}:${chartType}:${timeRange}`;
+
+  return getCached(
+    cacheKey,
+    async () => {
+      // Fetch y procesar datos desde DB
+      const rawData = await fetchRawData(userId, timeRange);
+      const processedData = processDataForChart(rawData, chartType);
+      return processedData;
+    },
+    CACHE_TTL.USAGE_METRICS // 1 hora
+  );
+}
+```
+
+**Métricas de Performance de Charts**:
+
+| Optimización | Impacto | Cuándo Usar |
+|--------------|---------|-------------|
+| **Lazy Loading** | 🟢 Alto | Siempre (charts fuera de viewport inicial) |
+| **Memoization** | 🟢 Alto | Charts que re-renderizan frecuentemente |
+| **Virtualización** | 🟢 Alto | Listas con 20+ charts |
+| **Debouncing** | 🟡 Medio | Filtros interactivos |
+| **Web Workers** | 🟡 Medio | Cálculos > 100ms |
+| **Progressive Loading** | 🟢 Alto | Datos históricos extensos |
+| **Desactivar Animaciones** | 🟢 Alto | Datasets > 1000 puntos |
+
 ---
 
 ## 📊 Monitoreo y Métricas

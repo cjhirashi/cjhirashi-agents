@@ -1207,6 +1207,314 @@ function maskAccountNumber(accountNumber: string): string {
 
 ---
 
+## 📊 Dashboard de Métricas
+
+### ⚠️ IMPORTANTE: Visualización de Datos
+
+**REQUISITO CRÍTICO**: Todas las métricas financieras **DEBEN** incluir gráficos visuales, no solo tablas de números.
+
+### Métricas a Visualizar
+
+#### 1. Resumen Financiero
+
+```typescript
+// components/finance/FinancialOverview.tsx
+// DEBE incluir:
+// - Gráfico de dona: Distribución de gastos por categoría
+// - Gráfico de barras: Ingresos vs Gastos (últimos 6 meses)
+// - Indicador de patrimonio neto con tendencia
+// - Flujo de efectivo mensual
+```
+
+**Visualizaciones requeridas**:
+- 🍩 Gráfico de dona: Gastos por categoría (mes actual)
+- 📊 Gráfico de barras: Comparación ingresos/gastos (6 meses)
+- 💰 Indicador KPI: Patrimonio neto con cambio %
+- 📈 Gráfico de área: Flujo de efectivo acumulado
+
+#### 2. Presupuestos
+
+```typescript
+// components/finance/BudgetProgressChart.tsx
+// DEBE incluir:
+// - Progress bars por categoría con colores (verde/amarillo/rojo)
+// - Gráfico de radar: Adherencia a múltiples presupuestos
+// - Comparación mensual
+```
+
+**Visualizaciones requeridas**:
+- 📊 Progress bars: Cada presupuesto con % usado
+  - Verde: < 80%
+  - Amarillo: 80-100%
+  - Rojo: > 100%
+- 🕸️ Radar chart: Vista general de todos los presupuestos
+- 📈 Gráfico de línea: Evolución de gasto vs presupuesto por mes
+- ⚡ Alertas visuales: Presupuestos en riesgo destacados
+
+#### 3. Análisis de Gastos
+
+```typescript
+// components/finance/SpendingAnalysisChart.tsx
+// DEBE incluir:
+// - Treemap: Gastos jerárquicos por categoría
+// - Gráfico de barras horizontales: Top 10 gastos
+// - Heatmap: Gastos por día del mes
+```
+
+**Visualizaciones requeridas**:
+- 🗺️ Treemap: Categorías y subcategorías proporcionales
+- 📊 Barras horizontales: Comercios con más gastos
+- 🔥 Heatmap calendario: Patrones de gasto por día
+- 📈 Gráfico de línea: Tendencia de gasto diario
+
+#### 4. Deudas e Inversiones
+
+```typescript
+// components/finance/DebtPayoffChart.tsx
+// DEBE incluir:
+// - Gráfico de cascada: Progreso de liquidación de deudas
+// - Gráfico de área apilada: Distribución de deudas
+// - Timeline: Plan de pagos
+```
+
+**Visualizaciones requeridas**:
+- 📉 Gráfico de cascada: Reducción de deuda mes a mes
+- 📊 Área apilada: Múltiples deudas y su evolución
+- 💸 Gauge chart: % de deuda pagada vs total
+- 📅 Timeline: Fechas proyectadas de liquidación
+
+```typescript
+// components/finance/InvestmentPerformanceChart.tsx
+// DEBE incluir:
+// - Gráfico de línea: Performance de inversiones
+// - Gráfico de dona: Distribución de portafolio
+// - Indicadores de ROI
+```
+
+**Visualizaciones requeridas**:
+- 📈 Línea multi-serie: Valor de cada inversión en el tiempo
+- 🍩 Dona: Asset allocation (acciones, bonos, crypto, etc.)
+- 📊 Barras: ROI por inversión
+- 💹 Indicadores: Ganancia/pérdida total y %
+
+#### 5. Pronósticos
+
+```typescript
+// components/finance/CashFlowForecastChart.tsx
+// DEBE incluir:
+// - Gráfico de área con zona de proyección
+// - Bandas de confianza
+// - Escenarios (optimista, realista, pesimista)
+```
+
+**Visualizaciones requeridas**:
+- 📈 Área con gradiente: Histórico + proyección
+- 🎯 Bandas: Rango de confianza (10%, 50%, 90%)
+- 📊 Barras: Comparación de escenarios
+- ⚠️ Alertas: Meses proyectados con balance negativo
+
+### Librerías Recomendadas
+
+```typescript
+// Opción 1: Recharts (Recomendado para React)
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  AreaChart,
+  RadarChart,
+  Treemap,
+} from "recharts";
+
+// Opción 2: Apache ECharts (más potente)
+import ReactECharts from "echarts-for-react";
+
+// Opción 3: Tremor (optimizado para dashboards financieros)
+import {
+  AreaChart,
+  BarChart,
+  DonutChart,
+  LineChart,
+} from "@tremor/react";
+```
+
+### Ejemplo de Implementación
+
+```typescript
+// components/finance/BudgetProgressCard.tsx
+"use client";
+
+import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface Budget {
+  category: string;
+  amount: number;
+  spent: number;
+  percentage: number;
+}
+
+export function BudgetProgressCard({ budgets }: { budgets: Budget[] }) {
+  const getColor = (percentage: number) => {
+    if (percentage < 80) return "bg-green-500";
+    if (percentage < 100) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const getTextColor = (percentage: number) => {
+    if (percentage < 80) return "text-green-600";
+    if (percentage < 100) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Presupuestos del Mes</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {budgets.map((budget) => (
+          <div key={budget.category} className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">{budget.category}</span>
+              <span className={getTextColor(budget.percentage)}>
+                ${budget.spent.toFixed(0)} / ${budget.amount.toFixed(0)}
+                <span className="ml-2">({budget.percentage.toFixed(0)}%)</span>
+              </span>
+            </div>
+            <Progress
+              value={Math.min(budget.percentage, 100)}
+              className={getColor(budget.percentage)}
+            />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+```typescript
+// components/finance/SpendingByCategory.tsx
+"use client";
+
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+
+const COLORS = {
+  FOOD: "#10b981",
+  TRANSPORT: "#3b82f6",
+  ENTERTAINMENT: "#8b5cf6",
+  SHOPPING: "#ec4899",
+  UTILITIES: "#f59e0b",
+  OTHER: "#6b7280",
+};
+
+interface SpendingData {
+  category: string;
+  amount: number;
+}
+
+export function SpendingByCategoryChart({ data }: { data: SpendingData[] }) {
+  return (
+    <div className="w-full h-[400px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="amount"
+            nameKey="category"
+            cx="50%"
+            cy="50%"
+            outerRadius={120}
+            label={({ category, percent }) =>
+              `${category}: ${(percent * 100).toFixed(0)}%`
+            }
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[entry.category as keyof typeof COLORS]}
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value: number) =>
+              `$${value.toFixed(2)}`
+            }
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+```
+
+### Principios de Diseño para Gráficos Financieros
+
+1. **💰 Formato de Moneda**:
+   - Siempre formatear con símbolo de moneda
+   - Usar separadores de miles
+   - Dos decimales para cantidades precisas
+
+2. **🎨 Código de Colores**:
+   - Verde: Ingresos, ganancias, positivo
+   - Rojo: Gastos, pérdidas, deudas
+   - Azul: Neutral, información
+   - Amarillo: Advertencias, cerca del límite
+
+3. **📊 Comparaciones Temporales**:
+   - Siempre mostrar período anterior
+   - Indicar % de cambio
+   - Tendencias con flechas ↗️↘️
+
+4. **⚡ Interactividad**:
+   - Click en categoría → filtrar transacciones
+   - Hover → tooltip con detalles
+   - Zoom en gráficos de tendencia temporal
+
+5. **📱 Responsive**:
+   - Simplificar gráficos en móvil
+   - Stack vertical en pantallas pequeñas
+   - Ocultar leyendas extensas, usar colores
+
+### KPIs Visuales Requeridos
+
+Cada dashboard financiero debe mostrar estos KPIs con visualización:
+
+```typescript
+interface FinancialKPIs {
+  netWorth: {
+    value: number;
+    change: number; // %
+    trend: "up" | "down" | "stable";
+  };
+  monthlyIncome: {
+    value: number;
+    change: number;
+  };
+  monthlyExpenses: {
+    value: number;
+    change: number;
+  };
+  savingsRate: {
+    value: number; // %
+    target: number; // %
+  };
+  debtToIncome: {
+    value: number; // %
+    status: "good" | "warning" | "critical";
+  };
+}
+```
+
+Cada KPI debe renderizarse como:
+- 📊 **Número grande** con formato
+- ↗️ **Indicador de cambio** (%, flecha, color)
+- 📈 **Sparkline** (mini gráfico de tendencia)
+
+---
+
 ## 📡 API Reference
 
 Ver documentación completa: [API Reference](../../api/README.md#finance-api)

@@ -1280,6 +1280,192 @@ export async function getHealthProfile(userId: string) {
 
 ---
 
+## 📊 Dashboard de Métricas
+
+### ⚠️ IMPORTANTE: Visualización de Datos
+
+**REQUISITO CRÍTICO**: Todas las métricas y estadísticas en la aplicación **DEBEN** incluir gráficos visuales, no solo tablas de números.
+
+### Métricas a Visualizar
+
+#### 1. Adherencia de Medicamentos
+
+```typescript
+// components/health/MedicationAdherenceChart.tsx
+// DEBE incluir:
+// - Gráfico de línea de adherencia mensual (%)
+// - Gráfico de barras por medicamento
+// - Indicadores visuales (verde/amarillo/rojo)
+// - Comparación con mes anterior
+```
+
+**Visualizaciones requeridas**:
+- 📈 Gráfico de línea: Adherencia por día (últimos 30 días)
+- 📊 Gráfico de barras: Adherencia por medicamento
+- 🎯 Gauge chart: Adherencia promedio del mes
+- 📉 Gráfico de tendencia: Mejora/empeoramiento
+
+#### 2. Mediciones de Salud
+
+```typescript
+// components/health/HealthMeasurementsChart.tsx
+// DEBE incluir:
+// - Gráfico de línea para peso (tendencia)
+// - Gráfico de línea para presión arterial
+// - Gráfico de línea para glucosa
+// - Zonas de alerta (rangos normales vs anormales)
+```
+
+**Visualizaciones requeridas**:
+- 📈 Peso: Línea con tendencia y objetivo
+- 💓 Presión: Doble línea (sistólica/diastólica) con zonas
+- 🩸 Glucosa: Línea con rangos objetivo (antes/después comidas)
+- 🌡️ Temperatura: Indicador visual con alertas
+
+#### 3. Citas Médicas
+
+```typescript
+// components/health/AppointmentsCalendar.tsx
+// DEBE incluir:
+// - Calendario visual mensual
+// - Timeline de próximas citas
+// - Indicadores por tipo de cita
+```
+
+**Visualizaciones requeridas**:
+- 📅 Calendario: Vista mensual con citas marcadas
+- ⏰ Timeline: Próximas 5 citas en orden cronológico
+- 📊 Gráfico de dona: Citas por especialidad
+- 📈 Historial: Citas completadas por mes (últimos 6 meses)
+
+#### 4. Insights de IA
+
+```typescript
+// components/health/HealthInsightsCard.tsx
+// DEBE incluir:
+// - Score de salud visual (0-100)
+// - Radial chart para diferentes áreas
+// - Indicadores de tendencias
+```
+
+**Visualizaciones requeridas**:
+- 🎯 Score de salud: Gauge chart circular
+- 🕸️ Radar chart: Múltiples dimensiones (medicamentos, citas, mediciones, etc.)
+- 📊 Gráfico de barras: Comparación con objetivos
+- ⚡ Indicadores: Alertas y recomendaciones destacadas
+
+### Librerías Recomendadas
+
+Para implementar las visualizaciones:
+
+```typescript
+// Opción 1: Recharts (Recomendado)
+import {
+  LineChart,
+  BarChart,
+  PieChart,
+  RadarChart,
+  AreaChart,
+} from "recharts";
+
+// Opción 2: Chart.js con react-chartjs-2
+import { Line, Bar, Doughnut, Radar } from "react-chartjs-2";
+
+// Opción 3: Tremor (diseñado para dashboards)
+import {
+  AreaChart,
+  BarChart,
+  DonutChart,
+  LineChart,
+} from "@tremor/react";
+```
+
+### Ejemplo de Implementación
+
+```typescript
+// components/health/MedicationAdherenceChart.tsx
+"use client";
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+interface AdherenceData {
+  date: string;
+  adherence: number; // 0-100
+}
+
+export function MedicationAdherenceChart({
+  data,
+}: {
+  data: AdherenceData[];
+}) {
+  return (
+    <div className="w-full h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis domain={[0, 100]} />
+          <Tooltip />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="adherence"
+            stroke="#2563eb"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+          {/* Línea de referencia en 80% */}
+          <Line
+            type="monotone"
+            dataKey={() => 80}
+            stroke="#eab308"
+            strokeDasharray="5 5"
+            dot={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      <p className="text-sm text-muted-foreground mt-2">
+        Línea amarilla: objetivo 80% de adherencia
+      </p>
+    </div>
+  );
+}
+```
+
+### Principios de Diseño para Gráficos
+
+1. **🎨 Colores Consistentes**:
+   - Verde: Positivo/saludable
+   - Amarillo: Advertencia
+   - Rojo: Alerta/crítico
+   - Azul: Neutral/información
+
+2. **📏 Responsive**:
+   - Todos los gráficos deben adaptarse a móvil
+   - Usar `ResponsiveContainer` de Recharts
+
+3. **💡 Interactividad**:
+   - Tooltips informativos al hover
+   - Click para ver detalles
+   - Zoom en gráficos de tendencia
+
+4. **🔍 Contexto**:
+   - Siempre mostrar rangos objetivo
+   - Incluir comparaciones (mes anterior, promedio)
+   - Leyendas claras
+
+---
+
 ## 📡 API Reference
 
 Ver documentación completa: [API Reference](../../api/README.md#health-api)
