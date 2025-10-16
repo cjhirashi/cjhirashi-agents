@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/support/tickets/[ticketId] - Obtener un ticket con todos sus mensajes
@@ -23,7 +23,7 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            image: true,
+            avatar: true,
           },
         },
         assignedTo: {
@@ -31,7 +31,7 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            image: true,
+            avatar: true,
           },
         },
         messages: {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { authOptions } from "@/lib/auth";
 import { UserRole, InvitationStatus } from "@prisma/client";
 import crypto from "crypto";
 
