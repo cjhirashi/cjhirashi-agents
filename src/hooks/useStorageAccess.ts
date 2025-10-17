@@ -10,12 +10,15 @@ import type { UserRole } from '@prisma/client';
 
 /**
  * Roles permitidos para acceder al Storage
+ * - SUPER_ADMIN: Control total del sistema
+ * - ADMIN: Administración de usuarios y permisos
+ * - INVITED_STORAGE: Usuarios invitados con acceso a Storage (guests)
  */
-const ALLOWED_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN'];
+const ALLOWED_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'INVITED_STORAGE'];
 
 /**
  * Hook para verificar acceso al Storage System
- * Solo SUPER_ADMIN y ADMIN tienen acceso
+ * SUPER_ADMIN, ADMIN e INVITED_STORAGE tienen acceso
  */
 export function useStorageAccess() {
   const { data: session, status } = useSession();

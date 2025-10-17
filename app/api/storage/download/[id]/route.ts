@@ -19,12 +19,14 @@ import { StorageError, FileNotFoundError, ForbiddenError } from '@/lib/storage';
  * - id: string (file ID)
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Verificar autenticación
-// 1. Verificar acceso al Storage (solo SUPER_ADMIN y ADMIN)
+    // 1. Desempaquetar params (Next.js 15 requiere Promise)
+    const { id } = await params;
+
+    // 2. Verificar acceso al Storage (solo SUPER_ADMIN, ADMIN e INVITED_STORAGE)
     const accessCheck = await checkStorageAccess();
     if (!accessCheck.allowed) {
       return NextResponse.json(
@@ -34,9 +36,9 @@ export async function GET(
     }
 
     const userId = accessCheck.userId!;
-    const fileId = params.id;
+    const fileId = id;
 
-    // 2. Validar ID
+    // 3. Validar ID
     if (!fileId || fileId.trim().length === 0) {
       return NextResponse.json(
         { error: 'File ID is required' },
@@ -44,11 +46,11 @@ export async function GET(
       );
     }
 
-    // 3. Llamar al servicio
+    // 4. Obtener y descargar el archivo
     const storageService = getStorageService();
     const downloadResult = await storageService.download(fileId, userId);
 
-    // 4. Preparar headers
+    // 5. Preparar headers
     const headers = new Headers();
     headers.set('Content-Type', downloadResult.contentType);
     headers.set('Content-Length', downloadResult.contentLength.toString());
@@ -62,8 +64,8 @@ export async function GET(
     headers.set('Pragma', 'no-cache');
     headers.set('Expires', '0');
 
-    // 5. Retornar stream como response
-    return new NextResponse(downloadResult.stream, {
+    // 6. Retornar stream como response
+    return new NextResponse(downloadResult.stream as any, {
       status: 200,
       headers,
     });

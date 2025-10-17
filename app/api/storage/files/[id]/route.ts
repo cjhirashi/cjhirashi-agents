@@ -20,12 +20,14 @@ import { StorageError, FileNotFoundError, ForbiddenError } from '@/lib/storage';
  * - id: string (file ID)
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Verificar autenticación
-// 1. Verificar acceso al Storage (solo SUPER_ADMIN y ADMIN)
+    // 1. Desempaquetar params (Next.js 15 requiere Promise)
+    const { id } = await params;
+
+    // 2. Verificar acceso al Storage (solo SUPER_ADMIN, ADMIN e INVITED_STORAGE)
     const accessCheck = await checkStorageAccess();
     if (!accessCheck.allowed) {
       return NextResponse.json(
@@ -35,9 +37,9 @@ export async function GET(
     }
 
     const userId = accessCheck.userId!;
-    const fileId = params.id;
+    const fileId = id;
 
-    // 2. Validar ID
+    // 3. Validar ID
     if (!fileId || fileId.trim().length === 0) {
       return NextResponse.json(
         { error: 'File ID is required' },
@@ -45,11 +47,11 @@ export async function GET(
       );
     }
 
-    // 3. Llamar al servicio
+    // 4. Obtener información del archivo
     const storageService = getStorageService();
     const file = await storageService.getFileInfo(fileId, userId);
 
-    // 4. Retornar respuesta
+    // 5. Retornar respuesta
     return NextResponse.json({
       success: true,
       data: file,
@@ -87,12 +89,14 @@ export async function GET(
  * - id: string (file ID)
  */
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Verificar autenticación
-// 1. Verificar acceso al Storage (solo SUPER_ADMIN y ADMIN)
+    // 1. Desempaquetar params (Next.js 15 requiere Promise)
+    const { id } = await params;
+
+    // 2. Verificar acceso al Storage (solo SUPER_ADMIN, ADMIN e INVITED_STORAGE)
     const accessCheck = await checkStorageAccess();
     if (!accessCheck.allowed) {
       return NextResponse.json(
@@ -102,9 +106,9 @@ export async function DELETE(
     }
 
     const userId = accessCheck.userId!;
-    const fileId = params.id;
+    const fileId = id;
 
-    // 2. Validar ID
+    // 3. Validar ID
     if (!fileId || fileId.trim().length === 0) {
       return NextResponse.json(
         { error: 'File ID is required' },
@@ -112,11 +116,11 @@ export async function DELETE(
       );
     }
 
-    // 3. Llamar al servicio
+    // 4. Eliminar archivo
     const storageService = getStorageService();
     await storageService.delete(fileId, userId);
 
-    // 4. Retornar respuesta
+    // 5. Retornar respuesta
     return NextResponse.json({
       success: true,
       message: 'File deleted successfully',

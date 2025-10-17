@@ -86,12 +86,22 @@ model User {
 }
 
 enum UserRole {
-  SUPER_ADMIN  // Control total - Solo cjhirashi@gmail.com
-  ADMIN        // Gestión de usuarios y permisos
-  MANAGER      // Supervisión y reportes (futuro)
-  DEVELOPER    // Crear y gestionar agentes (futuro)
-  USER         // Usuario estándar
-  GUEST        // Acceso limitado (futuro)
+  // Administración
+  SUPER_ADMIN       // Control total - Solo cjhirashi@gmail.com
+  ADMIN             // Gestión de usuarios y permisos
+
+  // Usuarios por Invitación
+  INVITED_AGENT     // Usuario invitado - Acceso a agentes específicos asignados por admin
+  INVITED_STORAGE   // Usuario invitado con acceso a Storage - Guests del sistema
+
+  // Usuarios por Suscripción
+  SUBSCRIBER        // Usuario que se suscribe a un plan de renta
+
+  // Otros (futuro)
+  MANAGER           // Supervisión y reportes (futuro)
+  DEVELOPER         // Crear y gestionar agentes (futuro)
+  USER              // Usuario estándar
+  GUEST             // Acceso limitado (futuro)
 }
 
 enum SubscriptionTier {

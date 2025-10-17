@@ -213,6 +213,7 @@ export class StorageService {
         // Para streams, necesitaríamos implementar decryptStream
         // Por ahora, convertir a buffer (no óptimo para archivos grandes)
         const chunks: Uint8Array[] = [];
+        // @ts-ignore - ReadableStream type mismatch
         const reader = stream.getReader();
 
         while (true) {

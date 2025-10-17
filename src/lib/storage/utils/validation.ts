@@ -52,7 +52,7 @@ export function getAllowedMimeTypesForContext(
     case 'THEME':
     case 'AVATAR':
       // Solo imágenes
-      return ALLOWED_MIME_TYPES.IMAGE;
+      return [...ALLOWED_MIME_TYPES.IMAGE];
 
     case 'TICKET':
       // Imágenes y documentos
@@ -79,7 +79,7 @@ export function getAllowedMimeTypesForContext(
 
     case 'BACKUP':
       // Principalmente archivos comprimidos
-      return ALLOWED_MIME_TYPES.ARCHIVE;
+      return [...ALLOWED_MIME_TYPES.ARCHIVE];
 
     case 'TEMP':
     case 'OTHER':

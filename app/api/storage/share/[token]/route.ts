@@ -21,11 +21,11 @@ import { StorageError, FileNotFoundError, UnauthorizedError, ForbiddenError } fr
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    // 1. Validar token
-    const token = params.token;
+    // 1. Desempaquetar params (Next.js 15 requiere Promise)
+    const { token } = await params;
     if (!token || token.trim().length === 0) {
       return NextResponse.json(
         { error: 'Share token is required' },

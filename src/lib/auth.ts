@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import type { UserRole } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -47,6 +48,14 @@ export const authOptions: NextAuthOptions = {
       // Guardar el ID del usuario en el token cuando se crea por primera vez
       if (user) {
         token.id = user.id;
+        // Obtener el rol del usuario desde la BD
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
@@ -54,9 +63,10 @@ export const authOptions: NextAuthOptions = {
       // Log para debug
       console.log("Session callback triggered", { session, token });
 
-      // Agregar el ID del usuario a la sesión desde el token
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
+      // Agregar el ID y rol del usuario a la sesión desde el token
+      if (session.user && token.id && token.role) {
+        session.user.id = token.id;
+        session.user.role = token.role as UserRole;
       }
       return session;
     },

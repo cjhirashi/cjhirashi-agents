@@ -310,6 +310,7 @@ export class VercelBlobAdapter implements StorageAdapter {
 
       // Convertir stream a buffer
       const chunks: Uint8Array[] = [];
+      // @ts-ignore - ReadableStream type mismatch
       const reader = download.stream.getReader();
 
       while (true) {

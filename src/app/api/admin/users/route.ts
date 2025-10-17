@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/admin/users - Delete user (GDPR compliance)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const currentUser = await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -111,7 +111,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // No permitir eliminar al propio usuario que está ejecutando la acción
-    if (session.user.id === userId) {
+    if (currentUser.id === userId) {
       return NextResponse.json(
         { error: "Cannot delete your own account from admin panel" },
         { status: 400 }

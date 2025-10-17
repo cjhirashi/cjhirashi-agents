@@ -8,8 +8,11 @@ import type { UserRole } from '@prisma/client';
 
 /**
  * Roles permitidos para acceder al Storage System
+ * - SUPER_ADMIN: Control total del sistema
+ * - ADMIN: Administración de usuarios y permisos
+ * - INVITED_STORAGE: Usuarios invitados con acceso a Storage (guests)
  */
-const ALLOWED_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN'];
+const ALLOWED_ROLES: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'INVITED_STORAGE'];
 
 /**
  * Resultado de la validación de acceso
@@ -23,7 +26,7 @@ export interface AccessCheckResult {
 
 /**
  * Valida que el usuario tenga permisos para acceder al Storage System
- * Solo SUPER_ADMIN y ADMIN pueden usar Storage
+ * SUPER_ADMIN, ADMIN e INVITED_STORAGE pueden usar Storage
  */
 export async function checkStorageAccess(): Promise<AccessCheckResult> {
   try {
