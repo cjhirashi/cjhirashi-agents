@@ -941,3 +941,222 @@ enum TicketStatus {
   CLOSED        // Cerrado y confirmado
   CANCELLED     // Cancelado por el usuario
 }
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA DE ALMACENAMIENTO (STORAGE)
+// ═══════════════════════════════════════════════════════════
+
+// Archivo almacenado
+model StorageFile {
+  id              String           @id @default(uuid())
+
+  // Información del archivo
+  filename        String
+  originalName    String
+  storagePath     String           // Ruta en el provider (key/path)
+  storageProvider StorageProvider  @default(VERCEL_BLOB)
+  mimeType        String
+  size            BigInt           // Bytes
+  checksum        String           // SHA-256 hash
+
+  // Propietario y contexto
+  userId          String
+  folderId        String?          // Carpeta contenedora (opcional)
+
+  // Control de acceso
+  accessLevel     FileAccessLevel  @default(PRIVATE)
+  usageContext    FileUsageContext @default(OTHER)
+
+  // Seguridad
+  encrypted       Boolean          @default(false)
+  encryptionKeyId String?          // ID de la clave de encriptación
+
+  // Procesamiento (para imágenes)
+  isProcessed     Boolean          @default(false)
+  processingStatus String?         // "pending", "processing", "completed", "failed"
+  thumbnailPath   String?          // Ruta al thumbnail (si aplica)
+  metadata        Json?            // EXIF, dimensiones, duración, etc.
+
+  // Virus scanning
+  virusScanStatus String?          // "pending", "clean", "infected", "error"
+  virusScanDate   DateTime?
+
+  // Relaciones
+  folder          StorageFolder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  accessLogs      FileAccessLog[]
+  shares          FileShare[]
+
+  // Auditoría
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?        // Soft delete
+  expiresAt       DateTime?        // Para archivos temporales
+
+  @@index([userId])
+  @@index([folderId])
+  @@index([usageContext])
+  @@index([storageProvider])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("storage_files")
+}
+
+// Carpetas (organización jerárquica)
+model StorageFolder {
+  id          String          @id @default(uuid())
+  userId      String
+
+  name        String
+  parentId    String?         // Para carpetas anidadas
+  path        String          // Ruta completa (ej: "/docs/health")
+
+  // Metadata
+  description String?
+  color       String?         // Para UI
+  icon        String?         // Para UI
+
+  // Relaciones
+  parent      StorageFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    StorageFolder[] @relation("FolderHierarchy")
+  files       StorageFile[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([userId, path])
+  @@index([userId])
+  @@index([parentId])
+  @@map("storage_folders")
+}
+
+// Cuotas de almacenamiento por usuario
+model StorageQuota {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+
+  // Límites
+  maxStorage      BigInt   // Bytes totales permitidos
+  maxFileSize     BigInt   // Tamaño máximo por archivo
+  maxFiles        Int      // Número máximo de archivos
+
+  // Uso actual
+  usedStorage     BigInt   @default(0)
+  fileCount       Int      @default(0)
+
+  // Desglose por contexto
+  usageBreakdown  Json?    // { "THEME": 1024, "AVATAR": 2048, ... }
+
+  // Tier de suscripción (referencia)
+  subscriptionTier String  @default("FREE")
+
+  // Auditoría
+  lastCalculated  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("storage_quotas")
+}
+
+// Log de acceso a archivos (auditoría)
+model FileAccessLog {
+  id          String      @id @default(uuid())
+  fileId      String
+  userId      String
+
+  action      FileAction  // "UPLOAD", "DOWNLOAD", "VIEW", "DELETE"
+  ipAddress   String?
+  userAgent   String?
+
+  // Metadata adicional
+  metadata    Json?       // Info extra dependiendo de la acción
+
+  file        StorageFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  timestamp   DateTime    @default(now())
+
+  @@index([fileId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("file_access_logs")
+}
+
+// Sistema de compartición de archivos
+model FileShare {
+  id          String       @id @default(uuid())
+  fileId      String
+  sharedBy    String       // User ID
+
+  // Tipo de compartición
+  shareType   ShareType    @default(LINK)
+  shareToken  String       @unique  // Token único para acceso vía link
+
+  // Control de acceso
+  password    String?      // Hash de contraseña (opcional)
+  maxDownloads Int?        // Límite de descargas (null = ilimitado)
+  downloadCount Int        @default(0)
+
+  // Permisos
+  allowDownload Boolean    @default(true)
+  allowView     Boolean    @default(true)
+
+  // Expiración
+  expiresAt   DateTime?
+
+  // Relaciones
+  file        StorageFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  // Auditoría
+  createdAt   DateTime     @default(now())
+  lastAccessed DateTime?
+  revokedAt   DateTime?    // Para invalidar el share
+
+  @@index([fileId])
+  @@index([shareToken])
+  @@index([expiresAt])
+  @@map("file_shares")
+}
+
+// ═══════════════════════════════════════════════════════════
+// ENUMS DEL STORAGE SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+enum StorageProvider {
+  VERCEL_BLOB   // Producción (default)
+  LOCAL         // Desarrollo local
+  AWS_S3        // AWS S3 (futuro)
+  CLOUDFLARE_R2 // Cloudflare R2 (futuro)
+}
+
+enum FileAccessLevel {
+  PRIVATE       // Solo el propietario
+  INTERNAL      // Usuarios autenticados del sistema
+  PUBLIC        // Acceso público (con link)
+  SHARED        // Compartido con usuarios específicos
+}
+
+enum FileUsageContext {
+  THEME         // Assets del tema (logos, favicon)
+  AVATAR        // Avatares de usuarios
+  TICKET        // Adjuntos de tickets de soporte
+  ARTIFACT      // Artefactos generados por agentes
+  HEALTH        // Documentos médicos (HIPAA)
+  FINANCE       // Documentos financieros
+  BACKUP        // Respaldos del sistema
+  TEMP          // Archivos temporales
+  OTHER         // Uso general
+}
+
+enum FileAction {
+  UPLOAD
+  DOWNLOAD
+  VIEW
+  DELETE
+  SHARE
+  UPDATE
+}
+
+enum ShareType {
+  LINK          // Compartir vía link público
+  EMAIL         // Compartir vía email (futuro)
+  USER          // Compartir con usuario específico (futuro)
+}
