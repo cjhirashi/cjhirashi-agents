@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
 import { getStorageService } from '@/lib/storage';
 import { StorageError, FileNotFoundError, ForbiddenError } from '@/lib/storage';
 
@@ -23,7 +23,7 @@ export async function GET(
 ) {
   try {
     // 1. Verificar autenticación
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session || !session.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },

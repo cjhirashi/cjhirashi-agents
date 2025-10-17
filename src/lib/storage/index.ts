@@ -50,16 +50,20 @@ export {
   QUOTA_LIMITS,
 } from './types';
 
-// Adapters
-export { LocalStorageAdapter } from './adapters/local-adapter';
-export { VercelBlobAdapter } from './adapters/vercel-blob-adapter';
-export {
-  createStorageAdapter,
-  getStorageAdapter,
-  validateProviderConfig,
-  getAvailableProviders,
-  getCurrentProvider,
-} from './adapters/factory';
+// Adapters (nota: Los adapters se deben importar directamente si se necesita, no desde este archivo)
+// Ya que LocalStorageAdapter tiene dependencias de node (fs)
+// export { LocalStorageAdapter } from './adapters/local-adapter';
+// export { VercelBlobAdapter } from './adapters/vercel-blob-adapter';
+// export {
+//   createStorageAdapter,
+//   getStorageAdapter,
+//   validateProviderConfig,
+//   getAvailableProviders,
+//   getCurrentProvider,
+// } from './adapters/factory';
+
+// Para uso del adapter factory (server-side only)
+// import { createStorageAdapter } from '@/lib/storage/adapters/factory';
 
 // Validation utilities
 export {

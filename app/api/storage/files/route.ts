@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
 import { getStorageService } from '@/lib/storage';
 import type { FileUsageContext, FileAccessLevel } from '@prisma/client';
 import { StorageError } from '@/lib/storage';
@@ -28,7 +28,7 @@ import { StorageError } from '@/lib/storage';
 export async function GET(request: NextRequest) {
   try {
     // 1. Verificar autenticación
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session || !session.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
