@@ -826,30 +826,147 @@ erDiagram
 
 ```typescript
 enum UserRole {
-  SUPER_ADMIN  // Control total - Solo cjhirashi@gmail.com
-  ADMIN        // Gestión de usuarios y permisos
-  MANAGER      // Supervisión y reportes (futuro)
-  DEVELOPER    // Crear y gestionar agentes (futuro)
-  USER         // Usuario estándar
-  GUEST        // Acceso limitado (futuro)
+  // Administración
+  SUPER_ADMIN       // Control total - Solo cjhirashi@gmail.com
+  ADMIN             // Gestión de usuarios y permisos
+
+  // Usuarios por Invitación
+  INVITED_AGENT     // Usuario invitado - Acceso a agentes específicos asignados por admin
+  INVITED_STORAGE   // Usuario invitado con acceso a Storage - Guests del sistema
+
+  // Usuarios por Suscripción
+  SUBSCRIBER        // Usuario que se suscribe a un plan de renta
+
+  // Otros (futuro)
+  MANAGER           // Supervisión y reportes (futuro)
+  DEVELOPER         // Crear y gestionar agentes (futuro)
+  USER              // Usuario estándar
+  GUEST             // Acceso limitado (futuro)
 }
 ```
 
+**Cambios Recientes (2025-10-16)**:
+- ✅ Agregado: **INVITED_AGENT** - Usuarios invitados por admin con acceso a agentes específicos
+- ✅ Agregado: **INVITED_STORAGE** - Usuarios invitados con acceso exclusivo a Storage (guests)
+- ✅ Agregado: **SUBSCRIBER** - Usuarios que se suscriben directamente a planes de renta
+- ✅ Implementado: NextAuth ahora incluye `role` en JWT y sesión
+- ✅ Implementado: Storage middleware valida acceso para SUPER_ADMIN, ADMIN, INVITED_STORAGE
+
 ### Matriz de Permisos
 
-| Acción | SUPER_ADMIN | ADMIN | MANAGER | DEVELOPER | USER | GUEST |
-|--------|-------------|-------|---------|-----------|------|-------|
-| Ver usuarios | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Crear usuarios | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Eliminar usuarios | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Cambiar roles | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ |
-| Ver métricas globales | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Gestionar tickets | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Crear agentes | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Usar agentes | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ |
-| Ver propios datos | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Acción | SUPER_ADMIN | ADMIN | INVITED_AGENT | INVITED_STORAGE | SUBSCRIBER | MANAGER | DEVELOPER | USER | GUEST |
+|--------|-------------|-------|---------------|-----------------|------------|---------|-----------|------|-------|
+| **Administración** |
+| Ver usuarios | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Crear usuarios | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Eliminar usuarios | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Cambiar roles | ✅ | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Ver métricas globales | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Gestionar tickets | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Acceso a Storage** |
+| Usar Storage | ✅ | ✅ | ❌ | ✅ | ⚠️ | ✅ | ❌ | ❌ | ❌ |
+| Ver Storage de otros | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Acceso a Agentes** |
+| Crear agentes | ✅ | ✅ | ❌ | ❌ | ⚠️ | ✅ | ✅ | ✅ | ❌ |
+| Usar agentes propios | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Usar agentes públicos | ✅ | ✅ | ⚠️ | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Ver propios datos | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-⚠️ = Con limitaciones
+**Leyenda:**
+- ✅ = Acceso permitido
+- ❌ = Acceso denegado
+- ⚠️ = Acceso limitado/condicional
+
+**Notas por rol:**
+- **INVITED_AGENT**: Acceso solo a agentes que el admin le asignó específicamente
+- **INVITED_STORAGE**: Acceso exclusivo a Storage (invitados/guests del sistema)
+- **SUBSCRIBER**: Acceso limitado según su tier de suscripción (FREE, BASIC, PRO, ENTERPRISE, UNLIMITED)
+
+### Arquitectura de Acceso por Rol (2025-10-16)
+
+**Implementación de RBAC con NextAuth**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│         Cliente (React Component)                        │
+│  - useStorageAccess() hook                              │
+│  - Verifica: canAccessStorage                           │
+│  - Muestra/oculta UI según permisos                     │
+└──────────────────┬──────────────────────────────────────┘
+                   │ HTTP Request
+┌──────────────────▼──────────────────────────────────────┐
+│         NextAuth Session                                │
+│  - Incluye: user.id, user.role, user.email              │
+│  - Role obtenido del JWT token                          │
+│  - Actualizado en cada callback de sesión               │
+└──────────────────┬──────────────────────────────────────┘
+                   │ API Call
+┌──────────────────▼──────────────────────────────────────┐
+│         API Route (Next.js)                             │
+│  - checkStorageAccess() middleware                      │
+│  - Valida: SUPER_ADMIN, ADMIN, INVITED_STORAGE         │
+│  - Lanza error 403 si no autorizado                    │
+└──────────────────┬──────────────────────────────────────┘
+                   │ Database Query
+┌──────────────────▼──────────────────────────────────────┐
+│         Prisma + PostgreSQL                            │
+│  - Valida rol en base de datos                          │
+│  - Ejecuta operación si autorizado                      │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Cambios de Implementación (2025-10-16)**:
+
+1. **NextAuth Configuration** (`src/lib/auth.ts`):
+   - ✅ JWT callback: Obtiene rol del usuario desde BD
+   - ✅ Session callback: Incluye rol en la sesión
+   - ✅ Ambos callbacks ejecutados en cada login
+
+2. **Type Definitions** (`src/types/next-auth.d.ts`):
+   - ✅ Extendida interface Session para incluir `role?: UserRole`
+   - ✅ Extendida interface JWT para incluir `role?: UserRole`
+   - ✅ Type-safe access en toda la aplicación
+
+3. **Storage Middleware** (`src/lib/storage/middleware.ts`):
+   - ✅ `checkStorageAccess()`: Valida acceso en servidor
+   - ✅ `getStorageUserIdOrThrow()`: Retorna userId o lanza error
+   - ✅ Permite roles: SUPER_ADMIN, ADMIN, INVITED_STORAGE
+
+4. **Frontend Hook** (`src/hooks/useStorageAccess.ts`):
+   - ✅ `useStorageAccess()`: Hook React para verificar permisos
+   - ✅ Retorna: canAccessStorage, userRole, isLoading, allowedRoles
+   - ✅ Usa session de NextAuth (client-side)
+
+5. **API Endpoints** (todos los `/api/storage/*`):
+   - ✅ Todos inician con `checkStorageAccess()` middleware
+   - ✅ Retornan 403 si no autorizado
+   - ✅ 7 endpoints protegidos
+
+**Flujo de Autorización**:
+
+```
+User logs in with Google
+         ↓
+NextAuth generates JWT (sin rol aún)
+         ↓
+JWT callback ejecuta:
+  - Obtiene user de BD por ID
+  - Lee user.role
+  - Agrega role al token
+         ↓
+Session callback ejecuta:
+  - Copia role del token a session.user.role
+         ↓
+Frontend recibe sesión con role
+  - useStorageAccess() puede leer session.user.role
+  - useStorageAccess() valida contra ALLOWED_ROLES
+         ↓
+User hace request a API
+  - NextAuth middleware autentica
+  - checkStorageAccess() valida rol
+  - Si role ∈ ALLOWED_ROLES → continúa
+  - Si role ∉ ALLOWED_ROLES → 403 Forbidden
+```
 
 ---
 
@@ -1349,6 +1466,56 @@ cjhirashi-agents/
 - [NextAuth.js Documentation](https://next-auth.js.org)
 - [Google Gemini API](https://ai.google.dev/docs)
 - [shadcn/ui](https://ui.shadcn.com)
+
+---
+
+## Cambios Recientes del Sistema (2025-10-16)
+
+### ✅ Implementación de Nuevos Roles de Usuario
+
+**Cambios principales**:
+1. **Agregados 3 nuevos roles a `UserRole` enum**:
+   - `INVITED_AGENT`: Usuarios invitados por admin con acceso a agentes específicos
+   - `INVITED_STORAGE`: Usuarios invitados con acceso exclusivo a Storage (guests)
+   - `SUBSCRIBER`: Usuarios que se suscriben directamente a planes de renta
+
+2. **Sincronización de Prisma**:
+   - ✅ Schema actualizado con 3 nuevos roles
+   - ✅ Base de datos sincronizada (`npx prisma db push`)
+   - ✅ Cliente Prisma regenerado
+
+3. **Implementación de NextAuth**:
+   - ✅ JWT callback: Obtiene rol del usuario desde la BD
+   - ✅ Session callback: Incluye rol en la sesión NextAuth
+   - ✅ Type definitions: Extendidas para incluir `role` en Session y JWT
+
+4. **Storage RBAC**:
+   - ✅ Middleware actualizado para permitir INVITED_STORAGE
+   - ✅ Roles permitidos: SUPER_ADMIN, ADMIN, INVITED_STORAGE
+   - ✅ Hook `useStorageAccess()` actualizado para validar INVITED_STORAGE
+   - ✅ 7 endpoints de Storage protegidos
+
+5. **Correcciones de Compatibilidad**:
+   - ✅ Fixed Next.js 15 dynamic route params (Promise types)
+   - ✅ Fixed TypeScript type issues (readonly arrays)
+   - ✅ Instalada dependencia: @google/generative-ai
+
+**Archivos modificados**:
+- `prisma/schema.prisma` - 3 nuevos roles en UserRole enum
+- `src/lib/auth.ts` - NextAuth role en JWT/session
+- `src/types/next-auth.d.ts` - Type definitions actualizadas
+- `src/lib/storage/middleware.ts` - Permite INVITED_STORAGE
+- `src/hooks/useStorageAccess.ts` - Valida INVITED_STORAGE
+- 3 rutas API Storage - Fixed Next.js 15 Promise params
+- `next.config.ts` - ESLint config actualizado
+
+**Estado**: ✅ Build exitoso | ✅ TypeScript compilando | ✅ Todos los tests pasan
+
+**Próximos pasos**:
+- [ ] Implementar middleware de INVITED_AGENT para validar acceso a agentes específicos
+- [ ] Integrar SUBSCRIBER con sistema de cuotas por tier
+- [ ] Crear usuarios de prueba para cada tipo de rol
+- [ ] Testing de permisos para cada rol
 
 ---
 
