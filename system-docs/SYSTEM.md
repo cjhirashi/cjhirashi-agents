@@ -2,25 +2,103 @@
 
 ## Descripción General
 
-**CJHIRASHI Agents** es una plataforma integral de asistentes personales de IA que combina múltiples funcionalidades para ayudar a los usuarios a gestionar diferentes aspectos de su vida diaria.
+**CJHIRASHI Agents** es un **Hub Multi-Agente de IA** - Una plataforma avanzada que permite a los usuarios crear, gestionar e interactuar con múltiples agentes de inteligencia artificial especializados, cada uno equipado con herramientas específicas para diferentes dominios.
+
+### Visión del Proyecto
+
+**Un ecosistema completo de agentes IA donde cada agente es un especialista con acceso a herramientas poderosas.**
+
+No es una aplicación de salud o finanzas con IA agregada. Es una **plataforma de agentes IA** donde los agentes pueden tener herramientas de salud, finanzas, código, contenido, o cualquier otro dominio.
 
 ### Propósito
 
 Proporcionar una plataforma centralizada donde los usuarios puedan:
-- Interactuar con agentes IA personalizados
-- Gestionar su salud (medicamentos, citas médicas, alergias)
-- Administrar sus finanzas (cuentas, transacciones, presupuestos, deudas)
-- Recibir soporte técnico asistido por IA
-- Acceder a un sistema de administración avanzado con control granular de roles
+- 🤖 **Crear y gestionar múltiples agentes IA** personalizados
+- 🛠️ **Equipar agentes con herramientas especializadas** (health, finance, code, content, etc.)
+- 💬 **Conversar con agentes** que entienden contexto y usan herramientas
+- 🧠 **RAG (Retrieval-Augmented Generation)** para conocimiento personalizado
+- 🎭 **Multi-modal**: Texto, imágenes, voz, documentos
+- 🔗 **Multi-tool**: Cada agente puede usar múltiples herramientas
+- 📊 **Monitorear uso y costos** de cada agente y herramienta
+
+### Arquitectura del Hub
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           CJHIRASHI Agents Platform (Hub)               │
+├─────────────────────────────────────────────────────────┤
+│  Core Platform Layer                                    │
+│  • Auth & Users (RBAC)                                  │
+│  • Storage System (files, documents, RAG data)          │
+│  • Admin Panel (management & analytics)                 │
+│  • Support System (AI-powered tickets)                  │
+│  • Theme Customization (white-label)                    │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│           Agent Engine (Multi-Agent System)             │
+├─────────────────────────────────────────────────────────┤
+│  • Agent Orchestration (multi-agent conversations)      │
+│  • Tool System (extensible tool architecture)           │
+│  • RAG System (vector DB, embeddings, retrieval)        │
+│  • Context Management (memory, session, history)        │
+│  • Multi-Modal Support (text, images, voice, docs)      │
+│  • Streaming & Real-time (WebSocket, SSE)               │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│                   Agent Instances                       │
+├─────────────────────────────────────────────────────────┤
+│  Agent #1: Personal Assistant                           │
+│    Tools: Health, Finance, Calendar, Reminders          │
+│    RAG: Personal documents, health records              │
+│                                                          │
+│  Agent #2: Code Assistant (future)                      │
+│    Tools: Code gen, Review, Docs, Testing               │
+│    RAG: Codebase, documentation                         │
+│                                                          │
+│  Agent #3: Content Creator (future)                     │
+│    Tools: Writing, Image gen, Social media              │
+│    RAG: Brand guidelines, past content                  │
+│                                                          │
+│  Agent #N: Custom user-created agents                   │
+│    Tools: User-defined                                  │
+│    RAG: User-uploaded knowledge                         │
+└─────────────────────────────────────────────────────────┘
+```
 
 ### Características Principales
 
-- 🤖 **Sistema de Agentes IA**: Agentes conversacionales personalizados con Google Gemini 2.0
-- 🏥 **Gestión de Salud**: Medicamentos, citas, alergias, mediciones de salud
-- 💰 **Gestión Financiera**: Cuentas, transacciones, presupuestos, deudas, inversiones
-- 👥 **Administración de Usuarios**: Sistema RBAC con 6 roles y permisos granulares
-- 🎫 **Sistema de Soporte**: Tickets con respuestas automáticas de IA
-- 📊 **Métricas y Auditoría**: Seguimiento completo de uso y costos
+#### 🤖 Multi-Agent System
+- Crear múltiples agentes especializados
+- Cada agente con personalidad y propósito único
+- Agentes pueden colaborar entre sí (futuro)
+- Marketplace de agentes pre-configurados
+
+#### 🛠️ Multi-Tool Architecture
+- Sistema extensible de herramientas
+- Herramientas organizadas por dominio (health, finance, code, etc.)
+- Agentes eligen herramientas según la tarea
+- Usuarios pueden crear herramientas personalizadas (futuro)
+
+#### 🧠 RAG (Retrieval-Augmented Generation)
+- Upload de documentos personales
+- Vector embeddings para búsqueda semántica
+- Contexto personalizado por usuario/agente
+- Memoria a largo plazo
+
+#### 🎭 Multi-Modal Support
+- Texto (conversaciones naturales)
+- Imágenes (análisis, generación)
+- Voz (speech-to-text, text-to-speech) (futuro)
+- Documentos (PDF, Word, Excel parsing)
+
+#### 👥 Platform Features
+- RBAC con 6 roles
+- Storage system robusto
+- Métricas y analytics
+- Soporte con IA
+- White-label customization
 
 ---
 
@@ -153,25 +231,51 @@ graph TD
 
 ---
 
-## Módulos del Sistema
+## Arquitectura del Sistema
 
-El sistema está organizado en **10 módulos principales** (8 implementados/planificados + 2 en diseño):
+El sistema está organizado en **3 capas principales**:
+
+### 📦 Layer 1: Core Platform (6 módulos base)
+
+Infraestructura y servicios fundamentales que soportan toda la plataforma.
+
+### 🤖 Layer 2: Agent Engine (EL CORAZÓN)
+
+Motor multi-agente con capacidades avanzadas de IA.
+
+### 🎯 Layer 3: Agent Tools & Instances
+
+Herramientas específicas y agentes pre-configurados.
+
+---
+
+## Core Platform Modules
 
 ### 1. Authentication & Authorization (`auth`)
 
 **Responsabilidad**: Gestión de autenticación y autorización de usuarios.
 
-**Características**:
-- OAuth con Google (NextAuth.js)
-- Sistema de roles (RBAC) con 6 niveles
-- JWT tokens
-- Session management
-- Middleware de protección de rutas
+**Características Implementadas**:
+- ✅ OAuth con Google (NextAuth.js)
+- ✅ Sistema de roles (RBAC) con 6 niveles
+- ✅ JWT tokens
+- ✅ Session management
+- ✅ Middleware de protección de rutas
+
+**Pendientes**:
+- ⚠️ **Email/Password authentication** - Solo OAuth Google implementado actualmente
+  - Agregar provider de Credentials a NextAuth
+  - Hash de passwords (bcrypt)
+  - Email verification
+  - Password reset flow
+  - Registro de usuarios vía email
 
 **Archivos clave**:
 - `src/app/api/auth/[...nextauth]/route.ts`
 - `src/middleware.ts`
 - `src/lib/auth.ts`
+
+**Estado**: ✅ Funcional (solo Google OAuth) | ⚠️ Pendiente: Email/Password
 
 [Ver documentación detallada](./auth.md)
 
@@ -199,97 +303,7 @@ El sistema está organizado en **10 módulos principales** (8 implementados/plan
 
 ---
 
-### 3. AI Agents (`agents`)
-
-**Responsabilidad**: Sistema de agentes IA conversacionales.
-
-**Características**:
-- Creación de agentes personalizados
-- Configuración de modelos (Google Gemini)
-- System prompts personalizados
-- Permisos granulares por agente
-- Estadísticas de uso
-- Categorización de agentes
-- Artefactos versionados
-
-**Archivos clave**:
-- `src/app/(protected)/agents/`
-- `src/app/api/agents/`
-- `src/lib/services/ai-service.ts`
-
-**Modelos de IA soportados**:
-- Google Gemini 2.0 Flash (experimental)
-
-[Ver documentación detallada](./agents.md)
-
----
-
-### 4. Conversations (`conversations`)
-
-**Responsabilidad**: Gestión de conversaciones con agentes.
-
-**Características**:
-- Chat sessions
-- Historial de mensajes
-- Conteo de tokens
-- Métricas por conversación
-- Resúmenes automáticos
-
-**Archivos clave**:
-- `src/app/(protected)/chat/`
-- `src/app/api/conversations/`
-
-[Ver documentación en agents.md](./agents.md)
-
----
-
-### 5. Health Management (`health`)
-
-**Responsabilidad**: Gestión integral de salud personal.
-
-**Características** (en desarrollo):
-- Perfil de salud
-- Registro de medicamentos
-- Control de toma de medicamentos
-- Citas médicas
-- Alergias
-- Mediciones de salud (peso, presión, glucosa, etc.)
-- Recordatorios automáticos
-
-**Archivos clave**:
-- `src/app/(protected)/health/` (planificado)
-- `src/app/api/health/` (planificado)
-
-**Estado**: Estructura de DB completa, implementación pendiente.
-
-[Ver documentación detallada](./health.md)
-
----
-
-### 6. Finance Management (`finance`)
-
-**Responsabilidad**: Gestión integral de finanzas personales.
-
-**Características** (en desarrollo):
-- Cuentas financieras (checking, savings, credit, investment)
-- Transacciones
-- Presupuestos
-- Deudas y plan de pago
-- Inversiones
-- Pagos recurrentes
-- Análisis financiero con IA
-
-**Archivos clave**:
-- `src/app/(protected)/finance/` (planificado)
-- `src/app/api/finance/` (planificado)
-
-**Estado**: Estructura de DB completa, implementación pendiente.
-
-[Ver documentación detallada](./finance.md)
-
----
-
-### 7. Support System (`support`)
+### 3. Support System (`support`)
 
 **Responsabilidad**: Sistema de tickets de soporte con IA.
 
@@ -310,7 +324,7 @@ El sistema está organizado en **10 módulos principales** (8 implementados/plan
 
 ---
 
-### 8. Admin Panel (`admin`)
+### 4. Admin Panel (`admin`)
 
 **Responsabilidad**: Panel de administración para SUPER_ADMIN y ADMIN.
 
@@ -331,7 +345,7 @@ El sistema está organizado en **10 módulos principales** (8 implementados/plan
 
 ---
 
-### 9. Storage System (`storage`)
+### 5. Storage System (`storage`)
 
 **Responsabilidad**: Sistema integral de almacenamiento de archivos.
 
@@ -359,7 +373,7 @@ El sistema está organizado en **10 módulos principales** (8 implementados/plan
 
 ---
 
-### 10. Theme Customization (`theme`)
+### 6. Theme Customization (`theme`)
 
 **Responsabilidad**: Personalización corporativa (white-label).
 
@@ -382,6 +396,255 @@ El sistema está organizado en **10 módulos principales** (8 implementados/plan
 **Dependencia**: Storage Module (para logos/favicon)
 
 [Ver documentación detallada](./theme.md)
+
+---
+
+## Agent Engine (Multi-Agent System)
+
+**EL CORAZÓN DE LA PLATAFORMA** 🤖
+
+El Agent Engine es el motor que convierte CJHIRASHI Agents en un verdadero hub multi-agente. Proporciona todas las capacidades avanzadas de IA que los agentes necesitan.
+
+### Componentes del Agent Engine
+
+#### 1. Agent Orchestration
+
+**Responsabilidad**: Gestión del ciclo de vida de agentes y orquestación de multi-agentes.
+
+**Características**:
+- Crear, actualizar, eliminar agentes
+- Gestión de conversaciones por agente
+- Orquestación multi-agente (agentes colaborando)
+- Context switching entre agentes
+- Agent marketplace (futuro)
+
+**Archivos clave**:
+- `src/lib/agents/orchestrator.ts`
+- `src/lib/agents/agent-manager.ts`
+- `src/app/api/agents/`
+
+---
+
+#### 2. Tool System
+
+**Responsabilidad**: Sistema extensible de herramientas que los agentes pueden usar.
+
+**Características**:
+- Registro de herramientas
+- Tool calling (function calling)
+- Tool execution engine
+- Tool permissions por agente
+- Tool marketplace (futuro)
+- Custom tools por usuarios (futuro)
+
+**Tool Categories**:
+- **Health Tools**: Medicamentos, citas, mediciones
+- **Finance Tools**: Transacciones, presupuestos, inversiones
+- **Productivity Tools**: Calendar, reminders, notes
+- **Code Tools**: Code gen, review, testing (futuro)
+- **Content Tools**: Writing, images, social media (futuro)
+- **Search Tools**: Web search, Wikipedia, etc.
+- **Integration Tools**: Email, Slack, etc. (futuro)
+
+**Archivos clave**:
+- `src/lib/agents/tools/` (tool definitions)
+- `src/lib/agents/tool-registry.ts`
+- `src/lib/agents/tool-executor.ts`
+
+[Ver documentación detallada](./tool-system.md)
+
+---
+
+#### 3. RAG System (Retrieval-Augmented Generation)
+
+**Responsabilidad**: Sistema de conocimiento personalizado para cada agente/usuario.
+
+**Características**:
+- Document upload y parsing (PDF, Word, Excel, etc.)
+- Vector embeddings (OpenAI, Gemini, o local)
+- Vector database (Pinecone, Weaviate, o PostgreSQL pgvector)
+- Semantic search
+- Context retrieval
+- Citation tracking
+
+**Flujo RAG**:
+```
+1. User uploads document → Parse & chunk
+2. Generate embeddings → Store in vector DB
+3. User asks question → Generate query embedding
+4. Semantic search → Retrieve relevant chunks
+5. Inject context into LLM → Generate answer with citations
+```
+
+**Archivos clave**:
+- `src/lib/agents/rag/embeddings.ts`
+- `src/lib/agents/rag/vector-store.ts`
+- `src/lib/agents/rag/retriever.ts`
+- `src/lib/agents/rag/document-parser.ts`
+
+[Ver documentación detallada](./rag-system.md)
+
+---
+
+#### 4. Context Management
+
+**Responsabilidad**: Gestión de memoria y contexto de conversaciones.
+
+**Características**:
+- Short-term memory (sesión actual)
+- Long-term memory (historial completo)
+- Context window management
+- Memory summarization
+- Context retrieval
+- User preferences y personalization
+
+**Archivos clave**:
+- `src/lib/agents/context/memory-manager.ts`
+- `src/lib/agents/context/session-manager.ts`
+- `src/lib/agents/context/summarizer.ts`
+
+---
+
+#### 5. Multi-Modal Support
+
+**Responsabilidad**: Soporte para diferentes modalidades de entrada/salida.
+
+**Características**:
+- **Texto**: Conversaciones naturales (✅ implementado)
+- **Imágenes**: Análisis y generación (🚧 parcial)
+- **Documentos**: PDF, Word, Excel parsing (📋 planificado)
+- **Voz**: Speech-to-text, Text-to-speech (📋 futuro)
+- **Video**: Análisis de videos (📋 futuro)
+
+**Archivos clave**:
+- `src/lib/agents/modalities/text.ts`
+- `src/lib/agents/modalities/image.ts`
+- `src/lib/agents/modalities/document.ts`
+
+---
+
+#### 6. Streaming & Real-time
+
+**Responsabilidad**: Comunicación en tiempo real con agentes.
+
+**Características**:
+- Server-Sent Events (SSE) para streaming
+- WebSocket para real-time bidireccional
+- Token-by-token streaming de respuestas
+- Real-time tool execution updates
+- Live typing indicators
+
+**Archivos clave**:
+- `src/lib/agents/streaming/sse-handler.ts`
+- `src/lib/agents/streaming/websocket-handler.ts`
+
+---
+
+### Estado del Agent Engine
+
+| Componente | Estado | Prioridad |
+|------------|--------|-----------|
+| **Agent Orchestration** | 🚧 Parcial | CRÍTICA |
+| **Tool System** | 📋 Diseño | CRÍTICA |
+| **RAG System** | 📋 Planificado | ALTA |
+| **Context Management** | 🚧 Básico | ALTA |
+| **Multi-Modal** | 🚧 Solo texto | MEDIA |
+| **Streaming** | 📋 Planificado | MEDIA |
+
+[Ver documentación completa del Agent Engine](./agent-engine.md)
+
+---
+
+## Agent Tools & Instances
+
+Herramientas específicas y agentes pre-configurados listos para usar.
+
+### Agent #1: Personal Assistant (Asistente Personal)
+
+**Propósito**: Ayudar al usuario con tareas de vida diaria (salud, finanzas, productividad).
+
+**Tools Equipadas**:
+
+#### Health Tools
+- `health:medications:list` - Listar medicamentos
+- `health:medications:add` - Agregar medicamento
+- `health:medications:log` - Registrar toma
+- `health:appointments:list` - Listar citas médicas
+- `health:appointments:create` - Crear cita
+- `health:measurements:add` - Agregar medición (peso, presión, etc.)
+- `health:reminders:set` - Configurar recordatorios
+
+[Ver documentación de Health Tools](./agent-tools-health.md)
+
+#### Finance Tools
+- `finance:accounts:list` - Listar cuentas
+- `finance:transactions:list` - Listar transacciones
+- `finance:transactions:add` - Agregar transacción
+- `finance:budget:check` - Ver presupuesto
+- `finance:budget:create` - Crear presupuesto
+- `finance:debts:list` - Listar deudas
+- `finance:debts:payoff-plan` - Generar plan de pago
+
+[Ver documentación de Finance Tools](./agent-tools-finance.md)
+
+#### Productivity Tools
+- `productivity:calendar:events` - Ver calendario
+- `productivity:reminders:set` - Crear recordatorio
+- `productivity:notes:create` - Crear nota
+
+**RAG Knowledge**:
+- Documentos personales del usuario
+- Historial de conversaciones
+- Preferencias y contexto
+
+**Estado**: 📋 Diseño completo, implementación pendiente
+
+---
+
+### Agent #2: Code Assistant (Futuro)
+
+**Propósito**: Asistir en desarrollo de software.
+
+**Tools Equipadas**:
+- Code generation
+- Code review
+- Testing
+- Documentation
+- Git operations
+
+**RAG Knowledge**:
+- Codebase del usuario
+- Documentación técnica
+- Best practices
+
+**Estado**: 📋 Concepto definido
+
+---
+
+### Agent #3: Content Creator (Futuro)
+
+**Propósito**: Crear contenido para redes sociales, blogs, marketing.
+
+**Tools Equipadas**:
+- Writing tools
+- Image generation
+- Social media scheduling
+- SEO optimization
+
+**RAG Knowledge**:
+- Brand guidelines
+- Past content
+- Style guide
+
+**Estado**: 📋 Concepto definido
+
+---
+
+### Agent #N: Custom User Agents
+
+Los usuarios podrán crear sus propios agentes personalizados, equipándolos con las herramientas que necesiten.
+
+**Estado**: 📋 Futuro
 
 ---
 
@@ -674,58 +937,255 @@ El sistema registra automáticamente:
 
 ---
 
-## Estado del Proyecto
+## Estado del Proyecto y Roadmap
 
-### Módulos Implementados ✅
+### 🎯 Visión: Hub Multi-Agente de IA
 
-- ✅ Autenticación con Google OAuth
-- ✅ Sistema de roles y permisos
-- ✅ Panel de administración de usuarios
-- ✅ Sistema de invitaciones
-- ✅ Sistema de tickets de soporte
-- ✅ Respuestas automáticas con IA en tickets
-- ✅ Métricas de uso básicas
-- ✅ Audit logs
+**Objetivo Principal**: Construir un ecosistema completo donde múltiples agentes IA especializados colaboran usando herramientas específicas y conocimiento personalizado (RAG).
 
-### Módulos en Desarrollo 🚧
+---
 
-- 🚧 Sistema de agentes IA (estructura lista, implementación pendiente)
-- 🚧 Chat con agentes (estructura lista)
-- 🚧 Sistema de salud (DB lista, UI pendiente)
-- 🚧 Sistema financiero (DB lista, UI pendiente)
-- 🚧 Sistema de artefactos versionados
-- 🚧 Análisis de personalidad con IA
+### ✅ Core Platform - Implementado
 
-### Módulos Planificados 📋
+**Fundación sólida para el hub de agentes:**
 
-**Prioridad CRÍTICA:**
-- 📋 **Storage System** (diseño completo) - Base para múltiples módulos
-  - Upload/download de archivos
-  - Múltiples providers (Vercel Blob, Local, S3, R2)
-  - Optimización de imágenes
-  - Quota management
-  - Encriptación para datos sensibles
-  - [Ver documentación](./storage.md)
+| Módulo | Estado | Descripción |
+|--------|--------|-------------|
+| **Auth & Users** | ✅ Completo | OAuth Google, RBAC (6 roles), permisos granulares |
+| **Admin Panel** | ✅ Completo | Dashboard, gestión de usuarios, métricas, audit logs |
+| **Support System** | ✅ Completo | Tickets con respuestas automáticas de IA (Gemini 2.0) |
+| **Database** | ✅ Completo | 32 tablas, schema optimizado, índices |
 
-**Prioridad ALTA:**
-- 📋 **Theme Customization** (diseño completo) - Personalización corporativa
-  - Paleta de colores
-  - Logos y favicon
-  - Tipografías
-  - SUPER_ADMIN only
-  - Depende de Storage Module
-  - [Ver documentación](./theme.md)
+---
 
-### Próximas Funcionalidades 📋
+### 🚧 Core Platform - En Desarrollo
 
-- 📋 Dashboard financiero con gráficos
-- 📋 Dashboard de salud con tendencias
-- 📋 Recordatorios automáticos (medicamentos, citas, pagos)
-- 📋 Exportación de datos
-- 📋 API pública para integraciones
-- 📋 Mobile app (React Native)
-- 📋 Sistema de notificaciones push
-- 📋 Marketplace de agentes
+| Módulo | Estado | Prioridad | Próximo Milestone |
+|--------|--------|-----------|-------------------|
+| **Storage System** | 📋 Diseño | **CRÍTICA** | Implementar Fase 1-4 |
+| **Theme Customization** | 📋 Diseño | Alta | Depende de Storage |
+
+---
+
+### 🤖 Agent Engine - Estado Actual
+
+**EL CORAZÓN DEL PROYECTO - Necesita desarrollo intensivo**
+
+⚠️ **IMPORTANTE**: Actualmente **NO hay ningún agente implementado**. Tenemos solo la infraestructura base (DB schema, API endpoints básicos, UI básica).
+
+| Componente | Estado Actual | Prioridad | Objetivo |
+|------------|---------------|-----------|----------|
+| **Agent Orchestration** | 🚧 10% | **CRÍTICA** | Sistema completo de gestión de agentes |
+| **Tool System** | ❌ 0% | **CRÍTICA** | Arquitectura extensible de herramientas |
+| **RAG System** | ❌ 0% | **CRÍTICA** | Vector DB + embeddings + retrieval |
+| **Context Management** | 🚧 5% | Alta | Memoria a corto y largo plazo |
+| **Multi-Modal** | ❌ 0% | Media | Solo estructura básica de texto |
+| **Streaming** | ❌ 0% | Media | SSE/WebSocket para real-time |
+
+**Evaluación Técnica Realista:**
+- ✅ Tenemos: DB schema de agents/conversations, algunos API endpoints, UI mockup
+- ❌ Falta TODO el core: Tool calling, RAG, agentes funcionales, memoria, multi-modal
+- 🎯 Gap crítico: **Sistema de herramientas (tool calling) y RAG son bloqueadores absolutos**
+- 📊 Estimación real: **Agent Engine está al ~5% de completitud**
+
+**Estado de Agentes:**
+- **Agentes implementados**: 0
+- **Agentes en desarrollo**: 0
+- **Agentes diseñados**: 1 (Personal Assistant)
+- **Necesitamos**: Implementar TODO el Agent Engine antes de tener un agente funcional
+
+---
+
+### 🎯 Agent Tools & Instances - Estado
+
+| Agent/Tool Set | Estado | Prioridad | Descripción |
+|----------------|--------|-----------|-------------|
+| **Personal Assistant Agent** | 📋 Diseño | **CRÍTICA** | Primer agente completo |
+| → Health Tools | 📋 DB lista | **CRÍTICA** | 7 herramientas definidas |
+| → Finance Tools | 📋 DB lista | **CRÍTICA** | 7 herramientas definidas |
+| → Productivity Tools | ❌ 0% | Alta | Calendar, reminders, notes |
+| **Code Assistant** | 📋 Concepto | Baja | Futuro (después de PA) |
+| **Content Creator** | 📋 Concepto | Baja | Futuro (después de PA) |
+
+---
+
+### 📊 Roadmap Priorizado
+
+#### **FASE 1: Foundation (Crítico)** - 6-8 semanas
+
+**Objetivo**: Tener la base sólida para construir agentes.
+
+1. **Storage System** (Semanas 1-4)
+   - Fase 1-2: Core + Security
+   - Fase 3-4: Processing + APIs
+   - Estado: 📋 Diseño completo, listo para implementar
+   - [Ver plan detallado](./storage.md)
+
+2. **Tool System Architecture** (Semanas 3-4)
+   - Diseñar sistema de tool calling
+   - Implementar tool registry
+   - Implementar tool executor
+   - Tool permissions
+   - Estado: 📋 Por diseñar
+
+3. **RAG System MVP** (Semanas 5-6)
+   - Document parsing (PDF, Word, Text)
+   - Embeddings (Gemini o OpenAI)
+   - Vector storage (PostgreSQL pgvector)
+   - Basic retrieval
+   - Estado: 📋 Por diseñar
+
+4. **Agent Orchestration Mejorado** (Semanas 7-8)
+   - Tool calling integration
+   - Context management mejorado
+   - Streaming responses
+   - Estado: 🚧 Expandir lo existente
+
+---
+
+#### **FASE 2: First Agent** (Alta Prioridad) - 4-6 semanas
+
+**Objetivo**: Lanzar el Personal Assistant Agent completamente funcional.
+
+1. **Health Tools Implementation** (Semanas 9-10)
+   - Implementar 7 health tools
+   - Integrar con tool system
+   - Testing completo
+   - UI para visualizar datos
+
+2. **Finance Tools Implementation** (Semanas 11-12)
+   - Implementar 7 finance tools
+   - Integrar con tool system
+   - Testing completo
+   - UI para visualizar datos
+
+3. **Personal Assistant Agent** (Semanas 13-14)
+   - Configurar agente con tools
+   - System prompt optimizado
+   - RAG con documentos personales
+   - Testing end-to-end
+   - Launch 🚀
+
+---
+
+#### **FASE 3: Platform Features** (Media Prioridad) - 4-6 semanas
+
+**Objetivo**: Features de plataforma y UX.
+
+1. **Theme Customization** (Semanas 15-16)
+   - Implementar según diseño
+   - Depende de Storage
+
+2. **Advanced RAG** (Semanas 17-18)
+   - Multi-document retrieval
+   - Citation tracking
+   - Hybrid search
+
+3. **Multi-Modal Expansion** (Semanas 19-20)
+   - Image analysis
+   - Document parsing mejorado
+   - Voice (futuro)
+
+---
+
+#### **FASE 4: Scaling** (Baja Prioridad) - Futuro
+
+- Agent Marketplace
+- Custom user agents
+- Agent collaboration (multi-agent)
+- More agent templates (Code, Content, etc.)
+- Mobile app
+- API pública
+
+---
+
+### 🎯 Siguiente Sprint Recomendado
+
+**Sprint 1 (Próximas 2 semanas): Storage System - Fase 1-2**
+
+**Objetivo**: Implementar Storage System core con security.
+
+**Entregables**:
+1. ✅ Database schema migrado
+2. ✅ StorageService implementado
+3. ✅ Vercel Blob adapter funcionando
+4. ✅ Local adapter (dev)
+5. ✅ Access control completo
+6. ✅ Quota management
+7. ✅ Rate limiting
+8. ✅ API endpoints básicos
+
+**Métricas de éxito**:
+- Upload/download funcionando
+- Quotas aplicándose
+- Security validada
+- 80%+ test coverage
+
+[Ver plan detallado](./storage.md#implementación)
+
+---
+
+### 📈 Métricas del Proyecto
+
+| Métrica | Estado Actual | Objetivo | Gap |
+|---------|---------------|----------|-----|
+| **Core Platform** | 4/6 (67%) | 6/6 (100%) | 2 módulos (Storage, Theme) |
+| **Agent Engine** | ~5% | 90%+ | **85% - GAP CRÍTICO** |
+| **Agent Tools** | 0/14 (0%) | 14 tools | 14 herramientas |
+| **Agentes Implementados** | 0 | 1 (PA) | 1 agente completo |
+| **Auth Methods** | 1/2 (50%) | 2 | Email/Password falta |
+| **Test Coverage** | ~30% | 80%+ | 50% más |
+| **Documentation** | 85% | 100% | 15% más |
+
+**Estado General del Proyecto**:
+- ✅ **Infraestructura**: Sólida (67%)
+- ⚠️ **Core del Producto (Agentes)**: Crítico (5%)
+- 📚 **Documentación**: Excelente (85%)
+
+---
+
+### 🚀 Hitos Clave
+
+| Hito | Fecha Objetivo | Estado |
+|------|----------------|--------|
+| **Storage System Completo** | Semana 4 | 📋 Planificado |
+| **Tool System + RAG MVP** | Semana 6 | 📋 Planificado |
+| **Health Tools Completas** | Semana 10 | 📋 Planificado |
+| **Finance Tools Completas** | Semana 12 | 📋 Planificado |
+| **🎉 Personal Assistant Launch** | Semana 14 | 📋 Planificado |
+| **Theme Customization** | Semana 16 | 📋 Planificado |
+| **RAG Avanzado** | Semana 18 | 📋 Planificado |
+
+---
+
+### ⚠️ Riesgos y Dependencias
+
+| Riesgo | Impacto | Mitigación |
+|--------|---------|------------|
+| **RAG complejidad** | Alto | Empezar con MVP simple (pgvector) |
+| **Tool calling bugs** | Medio | Testing exhaustivo, error handling robusto |
+| **Storage costs** | Medio | Implementar quotas estrictas, optimización |
+| **LLM API limits** | Medio | Rate limiting, caching, fallbacks |
+| **Vector DB scaling** | Bajo | PostgreSQL pgvector suficiente para MVP |
+
+---
+
+### 💡 Decisiones Técnicas Pendientes
+
+1. **Vector DB**: ¿PostgreSQL pgvector, Pinecone, o Weaviate?
+   - **Recomendación**: pgvector para MVP (ya tenemos PostgreSQL)
+
+2. **Embeddings**: ¿OpenAI, Gemini, o modelo local?
+   - **Recomendación**: Gemini (ya lo usamos, consistencia)
+
+3. **Document Parsing**: ¿PDF.js, PyPDF2, o servicio?
+   - **Recomendación**: PDF.js para web, PyPDF2 para backend
+
+4. **Streaming**: ¿SSE o WebSocket?
+   - **Recomendación**: SSE para simplicidad, WebSocket futuro
+
+5. **Tool Execution**: ¿Sync o async?
+   - **Recomendación**: Async con queue para long-running tools
 
 ---
 
@@ -793,5 +1253,21 @@ cjhirashi-agents/
 ---
 
 **Última actualización**: 2025-10-16
-**Versión del sistema**: 0.1.0
+**Versión del sistema**: 0.2.0 (Re-arquitecturado como Hub Multi-Agente)
+**Visión**: Hub de Agentes IA con capacidades multi-tool, multi-modal y RAG
 **Mantenido por**: cjhirashi@gmail.com
+
+---
+
+## 🎯 Resumen Ejecutivo
+
+**CJHIRASHI Agents** no es una app de salud o finanzas. Es un **Hub Multi-Agente de IA** donde:
+
+- 🤖 Los usuarios crean y gestionan **múltiples agentes especializados**
+- 🛠️ Cada agente tiene acceso a **herramientas específicas** (health, finance, code, content, etc.)
+- 🧠 Los agentes usan **RAG** para personalizar respuestas con conocimiento del usuario
+- 🎭 Soporte **multi-modal** (texto, imágenes, documentos, voz)
+- 🔗 Sistema **extensible** donde usuarios y devs pueden crear nuevas herramientas y agentes
+
+**Primer Agente**: Personal Assistant (salud + finanzas + productividad)
+**Siguientes**: Code Assistant, Content Creator, y agentes personalizados por usuarios

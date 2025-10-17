@@ -671,12 +671,25 @@ Verificar que `session.strategy = "jwt"` en `authOptions`.
 
 ### Pendiente 🚧
 
+**Prioridad ALTA:**
+- ⚠️ **Email/Password Authentication** - Actualmente solo Google OAuth está implementado
+  - Agregar `CredentialsProvider` a NextAuth
+  - Sistema de registro con email/password
+  - Hash de passwords con bcrypt
+  - Email verification
+  - Password reset flow (forgot password)
+  - Password strength validation
+  - Account linking (conectar email/password con OAuth)
+
+**Prioridad MEDIA:**
 - 🚧 Rate limiting en autenticación
 - 🚧 MFA (Multi-Factor Authentication)
 - 🚧 Social login adicional (GitHub, Microsoft)
-- 🚧 API Key authentication para integraciones
 - 🚧 Refresh token rotation automático
 - 🚧 Session device management (logout de otros dispositivos)
+
+**Prioridad BAJA:**
+- 🚧 API Key authentication para integraciones
 
 ---
 
