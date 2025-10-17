@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 
 import { getStorageService } from '@/lib/storage';
+import { checkStorageAccess } from '@/lib/storage/middleware';
 import type { ShareType } from '@prisma/client';
 import { StorageError, FileNotFoundError, ForbiddenError } from '@/lib/storage';
 
@@ -29,15 +30,16 @@ import { StorageError, FileNotFoundError, ForbiddenError } from '@/lib/storage';
 export async function POST(request: NextRequest) {
   try {
     // 1. Verificar autenticación
-    const session = await getServerSession();
-    if (!session || !session.user?.id) {
+// 1. Verificar acceso al Storage (solo SUPER_ADMIN y ADMIN)
+    const accessCheck = await checkStorageAccess();
+    if (!accessCheck.allowed) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: accessCheck.error || 'Storage access denied' },
+        { status: 403 }
       );
     }
 
-    const userId = session.user.id;
+    const userId = accessCheck.userId!;
 
     // 2. Parsear body
     const body = await request.json();

@@ -6,6 +6,10 @@
 // Core Service
 export { StorageService, getStorageService } from './storage-service';
 
+// Middleware
+export { checkStorageAccess, getStorageUserIdOrThrow } from './middleware';
+export type { AccessCheckResult } from './middleware';
+
 // Types
 export type {
   // Core types
