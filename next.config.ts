@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   eslint: {
     // Disable ESLint during build to allow project to compile
     // ESLint errors are from pre-existing code (any types), not from our new changes
