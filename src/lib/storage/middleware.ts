@@ -3,7 +3,7 @@
 // Autorización basada en roles para Storage API
 // ═══════════════════════════════════════════════════════════
 
-import { getServerSession } from 'next-auth/next';
+import { auth } from '@/lib/auth';
 import type { UserRole } from '@prisma/client';
 
 /**
@@ -31,7 +31,7 @@ export interface AccessCheckResult {
 export async function checkStorageAccess(): Promise<AccessCheckResult> {
   try {
     // 1. Obtener sesión
-    const session = await getServerSession();
+    const session = await auth();
 
     if (!session || !session.user) {
       return {

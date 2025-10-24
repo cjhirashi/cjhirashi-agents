@@ -266,6 +266,107 @@ npm run set-admin <email>    # Crear super admin
 
 ---
 
+## 💬 Chat API - Guía Rápida
+
+### Endpoints Implementados
+
+El Chat API está completamente funcional con SSE (Server-Sent Events) streaming:
+
+#### 1. **POST /api/v1/chat/send** - Enviar mensaje (SSE Streaming)
+
+```bash
+curl -X POST http://localhost:3000/api/v1/chat/send \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "sessionId": "session-uuid",
+    "message": "¿Qué es RAG?",
+    "ragEnabled": true,
+    "temperature": 0.7,
+    "maxTokens": 4096
+  }'
+```
+
+**Respuesta SSE:**
+```
+event: start
+data: {"messageId":"msg-uuid","timestamp":"2025-10-23T10:30:00Z"}
+
+event: chunk
+data: {"content":"RAG","delta":"RAG"}
+
+event: chunk
+data: {"content":"RAG stands for Retrieval","delta":" stands for Retrieval"}
+
+event: done
+data: {"messageId":"msg-uuid","tokensUsed":250,"cost":0.00075,"completedAt":"2025-10-23T10:30:15Z"}
+```
+
+#### 2. **POST /api/v1/chat/sessions** - Crear sesión
+
+```bash
+curl -X POST http://localhost:3000/api/v1/chat/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Mi primera sesión",
+    "agentIds": ["agent-uuid-1"]
+  }'
+```
+
+#### 3. **GET /api/v1/chat/sessions** - Listar sesiones
+
+```bash
+curl http://localhost:3000/api/v1/chat/sessions?limit=20&offset=0
+```
+
+#### 4. **GET /api/v1/chat/sessions/[id]** - Detalle de sesión
+
+```bash
+curl http://localhost:3000/api/v1/chat/sessions/session-uuid
+```
+
+#### 5. **DELETE /api/v1/chat/sessions/[id]** - Eliminar sesión
+
+```bash
+curl -X DELETE http://localhost:3000/api/v1/chat/sessions/session-uuid
+```
+
+#### 6. **GET /api/v1/chat/history/[sessionId]** - Historial paginado
+
+```bash
+curl http://localhost:3000/api/v1/chat/history/session-uuid?limit=50&offset=0
+```
+
+### Validaciones (Zod)
+
+Todos los endpoints tienen validación estricta:
+
+- ✅ **sessionId**: UUID válido
+- ✅ **message**: 1-10,000 caracteres
+- ✅ **temperature**: 0.0-2.0
+- ✅ **maxTokens**: 1-8,192
+- ✅ **selectedAgents**: Máximo 3 agentes
+
+### Error Handling
+
+Errores estructurados consistentes:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request data",
+    "statusCode": 400,
+    "timestamp": "2025-10-23T10:30:00Z",
+    "details": [...]
+  }
+}
+```
+
+Ver especificación completa en [`sys-docs/api/ENDPOINTS.md`](sys-docs/api/ENDPOINTS.md)
+
+---
+
 ## 📊 Panel de Administración
 
 ### Acceso
@@ -324,13 +425,18 @@ npm run set-admin <email>    # Crear super admin
 - [x] Sistema de Agentes
 - [x] **14 documentos, 40+ diagramas Mermaid, 25,000 líneas**
 
-### 🚧 Fase 3 - Implementación de Chat (En Progreso)
+### ✅ Fase 3 - Implementación de Chat (Completada)
 
-- [ ] Interfaz de chat con streaming
-- [ ] Integración con Gemini 2.0
-- [ ] Historial de conversaciones
-- [ ] Sistema de artefactos
-- [ ] Soporte markdown y código
+- [x] **Chat API con SSE Streaming** ✨ NEW
+- [x] **POST /api/v1/chat/send** - Mensajes con streaming en tiempo real
+- [x] **Chat Sessions CRUD** - Crear, listar, obtener, eliminar sesiones
+- [x] **Historial Paginado** - GET /api/v1/chat/history/[sessionId]
+- [x] **Validación Zod** - Schemas completos para todos los endpoints
+- [x] **Error Handling** - Manejo robusto de errores
+- [x] **TypeScript Types** - Type safety 100%
+- [ ] Interfaz de chat con streaming (próximo)
+- [ ] Integración con Gemini 2.0 (próximo)
+- [ ] Sistema de artefactos (próximo)
 
 ### 💭 Fase 4 - Sistema de Salud (Planeado)
 

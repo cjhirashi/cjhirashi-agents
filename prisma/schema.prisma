@@ -79,6 +79,9 @@ model User {
   supportTickets    SupportTicket[]      @relation("UserTickets")
   assignedTickets   SupportTicket[]      @relation("AssignedTickets")
 
+  // Relaciones de RAG (Phase 6)
+  documents         Document[]
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -1169,4 +1172,102 @@ enum ShareType {
   LINK          // Compartir vía link público
   EMAIL         // Compartir vía email (futuro)
   USER          // Compartir con usuario específico (futuro)
+}
+
+// ═══════════════════════════════════════════════════════════
+// SISTEMA RAG (Phase 6 - Document Indexing)
+// ═══════════════════════════════════════════════════════════
+
+// Documento indexado para RAG (Retrieval-Augmented Generation)
+model Document {
+  id              String    @id @default(uuid())
+  userId          String    // Owner del documento
+
+  // Información del archivo
+  filename        String
+  originalName    String
+  storageUrl      String    // URL en Vercel Blob
+  mimeType        String
+  size            BigInt    // Bytes
+
+  // Procesamiento
+  status          DocumentStatus @default(PENDING)
+  processingError String?   @db.Text
+
+  // Metadata de chunks
+  totalChunks     Int       @default(0)
+  chunkSize       Int       @default(800)    // Tokens por chunk
+  chunkOverlap    Int       @default(200)    // Overlap entre chunks
+
+  // Vectorización
+  vectorIndexId   String?   // ID en Pinecone (namespace: userId)
+  embeddingModel  String    @default("text-embedding-3-small")
+
+  // Metadata de contenido
+  contentType     DocumentContentType @default(GENERAL)
+  language        String    @default("es")
+  extractedText   String?   @db.Text  // Texto completo extraído (opcional)
+
+  // Auditoría
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks          DocumentChunk[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? // Soft delete
+
+  @@index([userId])
+  @@index([status])
+  @@index([vectorIndexId])
+  @@map("documents")
+}
+
+// Chunk de documento (fragmento indexado en Pinecone)
+model DocumentChunk {
+  id              String    @id @default(uuid())
+  documentId      String
+
+  // Contenido del chunk
+  content         String    @db.Text
+  chunkIndex      Int       // Orden en el documento (0, 1, 2, ...)
+  tokens          Int       // Número de tokens
+
+  // Vectorización
+  vectorId        String?   // ID del vector en Pinecone
+  embedding       String?   @db.Text  // Embedding serializado (opcional - cache)
+
+  // Metadata adicional
+  metadata        Json?     // Metadata extra (headers, page number, etc)
+
+  // Relación
+  document        Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@index([vectorId])
+  @@map("document_chunks")
+}
+
+// Estado del procesamiento del documento
+enum DocumentStatus {
+  PENDING           // Esperando procesamiento
+  PROCESSING        // En procesamiento
+  INDEXING          // Generando embeddings e indexando
+  COMPLETED         // Completado exitosamente
+  FAILED            // Error en procesamiento
+  DELETED           // Soft delete
+}
+
+// Tipo de contenido del documento (para contexto)
+enum DocumentContentType {
+  GENERAL           // Documentación general
+  TECHNICAL         // Documentación técnica
+  MEDICAL           // Documentos médicos
+  FINANCIAL         // Documentos financieros
+  LEGAL             // Documentos legales
+  EDUCATIONAL       // Material educativo
+  PERSONAL          // Notas personales
+  OTHER             // Otro tipo
 }

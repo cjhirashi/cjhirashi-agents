@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { UserRole, InvitationStatus } from "@prisma/client";
 import crypto from "crypto";
 
@@ -39,10 +38,9 @@ export async function GET() {
 // POST /api/admin/invitations - Create a new invitation
 export async function POST(request: NextRequest) {
   try {
-    await requireAdmin();
-    const session = await getServerSession(authOptions);
+    const admin = await requireAdmin();
 
-    if (!session?.user?.id) {
+    if (!admin?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -101,7 +99,7 @@ export async function POST(request: NextRequest) {
         email,
         token,
         role: role as UserRole,
-        invitedBy: session.user.id,
+        invitedBy: admin.id,
         expiresAt,
       },
       include: {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+
 import { prisma } from "@/lib/prisma";
 import { TicketCategory, TicketPriority, TicketStatus } from "@prisma/client";
 import { generateAISupportResponse, canAIResolve } from "@/lib/support-ai";
@@ -30,7 +30,7 @@ async function generateTicketNumber(): Promise<string> {
 // GET /api/support/tickets - Listar tickets del usuario o todos (admin)
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 // POST /api/support/tickets - Crear un nuevo ticket
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/support/tickets - Actualizar un ticket (solo admin)
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
