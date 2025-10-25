@@ -44,7 +44,7 @@ export default function ChatPage() {
       if (!isSessionLoading && sessions.length === 0 && !activeSessionId) {
         try {
           await createSession('New Chat');
-        } catch (error) {
+        } catch {
           toast({
             title: 'Error',
             description: 'Failed to create initial session',
@@ -61,7 +61,7 @@ export default function ChatPage() {
   const handleCreateSession = async () => {
     try {
       await createSession('New Chat');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to create new session',
@@ -77,7 +77,7 @@ export default function ChatPage() {
         title: 'Success',
         description: 'Conversation deleted',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to delete conversation',

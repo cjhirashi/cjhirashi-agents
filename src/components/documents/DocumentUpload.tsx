@@ -7,18 +7,16 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
-import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import type { Document } from '@/hooks/useDocuments';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════
 
 export interface DocumentUploadProps {
-  onUploadSuccess?: (document: Document) => void;
+  onUploadSuccess?: (file: File) => void;
   onError?: (error: Error) => void;
   maxSizeInMB?: number; // Default: 10MB
   acceptedTypes?: string[]; // Default: ['.pdf', '.txt', '.md', '.docx']
@@ -93,12 +91,11 @@ export function DocumentUpload({
         throw new Error(errorData.error?.message || 'Failed to upload document');
       }
 
-      const data = await response.json();
       setUploadedFile(file.name);
       setProgress(100);
 
       if (onUploadSuccess) {
-        onUploadSuccess(data);
+        onUploadSuccess(file);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Upload failed';

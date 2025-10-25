@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 // ═══════════════════════════════════════════════════════════
 
 interface DocumentsClientProps {
-  initialDocuments: Document[];
   usedBytes: number;
   limitBytes: number;
   tier: 'FREE' | 'PRO' | 'ENTERPRISE';
@@ -30,7 +29,6 @@ interface DocumentsClientProps {
 // ═══════════════════════════════════════════════════════════
 
 export function DocumentsClient({
-  initialDocuments,
   usedBytes: initialUsedBytes,
   limitBytes,
   tier,
@@ -42,11 +40,8 @@ export function DocumentsClient({
   const {
     documents,
     isLoading,
-    isUploading,
-    error,
     uploadDocument,
     deleteDocument,
-    refreshDocuments,
   } = useDocuments({
     autoRefresh: true,
     onUploadSuccess: (document) => {

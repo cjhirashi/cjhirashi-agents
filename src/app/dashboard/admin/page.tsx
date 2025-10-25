@@ -30,27 +30,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Users, Bot, Check, X, Globe, Mail, Plus, Trash2, Clock, BarChart3 } from "lucide-react";
+import { Shield, Users, Bot, Check, X, Globe, Mail, Plus, Trash2, Clock, BarChart3, Edit, UserPlus } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { UserMetricsDialog } from "@/components/admin/UserMetricsDialog";
-
-type User = {
-  id: string;
-  email: string | null;
-  name: string | null;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-  agentPermissions: Array<{
-    id: string;
-    agent: {
-      id: string;
-      name: string;
-      description: string | null;
-    };
-  }>;
-};
+import { UserCreateDialog } from "@/components/admin/UserCreateDialog";
+import { UserEditDialog } from "@/components/admin/UserEditDialog";
+import { useAdminUsers, type User, type UserRole } from "@/hooks/useAdminUsers";
+import { useToast } from "@/hooks/use-toast";
 
 type Agent = {
   id: string;
@@ -83,7 +70,18 @@ type Invitation = {
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
+  const { toast } = useToast();
+
+  // Use useAdminUsers hook for user management
+  const {
+    users,
+    isLoading: usersLoading,
+    createUser,
+    updateUser,
+    deleteUser: deleteUserFromHook,
+    refreshUsers,
+  } = useAdminUsers({ limit: 100 }); // Load all users for now (no pagination in UI)
+
   const [agents, setAgents] = useState<Agent[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +98,11 @@ export default function AdminPage() {
   const [isAgentsListDialogOpen, setIsAgentsListDialogOpen] = useState(false);
   const [selectedUserAgents, setSelectedUserAgents] = useState<User | null>(null);
 
+  // Dialogs for Create/Edit User
+  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
@@ -113,27 +116,24 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      const [usersRes, agentsRes, invitationsRes] = await Promise.all([
-        fetch("/api/admin/users"),
+      const [agentsRes, invitationsRes] = await Promise.all([
         fetch("/api/admin/agents"),
         fetch("/api/admin/invitations"),
       ]);
 
-      if (!usersRes.ok || !agentsRes.ok || !invitationsRes.ok) {
+      if (!agentsRes.ok || !invitationsRes.ok) {
         throw new Error("Failed to fetch data");
       }
 
-      const usersData = await usersRes.json();
       const agentsData = await agentsRes.json();
       const invitationsData = await invitationsRes.json();
 
-      setUsers(usersData.users || []);
       setAgents(agentsData.agents || []);
       setInvitations(invitationsData.invitations || []);
 
-      // Obtener el rol del usuario actual
-      if (session?.user?.email) {
-        const currentUser = usersData.users.find(
+      // Obtener el rol del usuario actual desde users del hook
+      if (session?.user?.email && users.length > 0) {
+        const currentUser = users.find(
           (u: User) => u.email === session.user.email
         );
         setCurrentUserRole(currentUser?.role || null);
@@ -145,35 +145,47 @@ export default function AdminPage() {
     }
   };
 
+  // Update currentUserRole cuando users cambia
+  useEffect(() => {
+    if (session?.user?.email && users.length > 0) {
+      const currentUser = users.find(
+        (u: User) => u.email === session.user.email
+      );
+      setCurrentUserRole(currentUser?.role || null);
+    }
+  }, [users, session?.user?.email]);
+
   const updateUserRole = async (userId: string, role: string) => {
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, role }),
+      await updateUser(userId, { role: role as UserRole });
+      toast({
+        title: 'Rol actualizado',
+        description: 'El rol del usuario ha sido actualizado exitosamente.',
       });
-
-      if (!res.ok) throw new Error("Failed to update role");
-
-      await loadData();
     } catch (error) {
       console.error("Error updating role:", error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el rol del usuario.',
+        variant: 'destructive',
+      });
     }
   };
 
   const toggleUserActive = async (userId: string, isActive: boolean) => {
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, isActive }),
+      await updateUser(userId, { isActive });
+      toast({
+        title: isActive ? 'Usuario activado' : 'Usuario desactivado',
+        description: `El usuario ha sido ${isActive ? 'activado' : 'desactivado'} exitosamente.`,
       });
-
-      if (!res.ok) throw new Error("Failed to update status");
-
-      await loadData();
     } catch (error) {
       console.error("Error updating status:", error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el estado del usuario.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -340,7 +352,7 @@ export default function AdminPage() {
     setIsAgentsListDialogOpen(true);
   };
 
-  const deleteUser = async (userId: string, userName: string | null, userEmail: string | null) => {
+  const handleDeleteUser = async (userId: string, userName: string | null, userEmail: string | null) => {
     const displayName = userName || userEmail || "este usuario";
 
     if (!confirm(
@@ -356,26 +368,28 @@ export default function AdminPage() {
     }
 
     try {
-      const res = await fetch(`/api/admin/users?userId=${userId}`, {
-        method: "DELETE",
+      await deleteUserFromHook(userId);
+      toast({
+        title: 'Usuario eliminado',
+        description: `${displayName} ha sido eliminado exitosamente.`,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Error al eliminar el usuario");
-        return;
-      }
-
-      alert(`Usuario ${displayName} eliminado exitosamente`);
-      await loadData();
+      await loadData(); // Refresh agents/invitations
     } catch (error) {
       console.error("Error deleting user:", error);
-      alert("Error al eliminar el usuario");
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar el usuario.',
+        variant: 'destructive',
+      });
     }
   };
 
-  if (loading) {
+  const handleEditUser = (user: User) => {
+    setUserToEdit(user);
+    setIsEditUserDialogOpen(true);
+  };
+
+  if (loading || usersLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p>Cargando...</p>
@@ -422,11 +436,17 @@ export default function AdminPage() {
 
         <TabsContent value="users" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Usuarios del Sistema</CardTitle>
-              <CardDescription>
-                Gestiona los roles y permisos de los usuarios
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Usuarios del Sistema</CardTitle>
+                <CardDescription>
+                  Gestiona los roles y permisos de los usuarios
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsCreateUserDialogOpen(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Crear Usuario
+              </Button>
             </CardHeader>
             <CardContent>
               <Table>
@@ -511,6 +531,19 @@ export default function AdminPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-2">
+                          {/* Editar Usuario - Siempre visible para ADMIN/SUPER_ADMIN */}
+                          {(currentUserRole === 'ADMIN' || currentUserRole === 'SUPER_ADMIN') && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => handleEditUser(user)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          )}
+
                           {/* Ver Métricas - Siempre visible */}
                           <Button
                             variant="default"
@@ -584,7 +617,7 @@ export default function AdminPage() {
                               variant="destructive"
                               size="sm"
                               className="w-full"
-                              onClick={() => deleteUser(user.id, user.name, user.email)}
+                              onClick={() => handleDeleteUser(user.id, user.name, user.email)}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Eliminar
@@ -795,6 +828,7 @@ export default function AdminPage() {
         </TabsContent>
       </Tabs>
 
+      {/* User Metrics Dialog */}
       <UserMetricsDialog
         userId={selectedMetricsUserId}
         userName={selectedMetricsUserName}
@@ -803,6 +837,30 @@ export default function AdminPage() {
           setIsMetricsDialogOpen(false);
           setSelectedMetricsUserId(null);
           setSelectedMetricsUserName(null);
+        }}
+      />
+
+      {/* Create User Dialog */}
+      <UserCreateDialog
+        open={isCreateUserDialogOpen}
+        onClose={() => setIsCreateUserDialogOpen(false)}
+        onCreate={async (data) => {
+          await createUser(data);
+          await loadData(); // Refresh agents/invitations
+        }}
+      />
+
+      {/* Edit User Dialog */}
+      <UserEditDialog
+        user={userToEdit}
+        open={isEditUserDialogOpen}
+        onClose={() => {
+          setIsEditUserDialogOpen(false);
+          setUserToEdit(null);
+        }}
+        onSave={async (userId, data) => {
+          await updateUser(userId, data);
+          await loadData(); // Refresh agents/invitations
         }}
       />
 

@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Download, Trash2, Loader2, AlertCircle, FileText } from 'lucide-react';
+import { Download, Trash2, Loader2, AlertCircle, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import {
   Sheet,
