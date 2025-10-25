@@ -8,7 +8,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/guards';
-import { withRateLimit } from '@/lib/rate-limit';
 import { deleteDocument } from '@/lib/rag/pipeline';
 import { ApiError } from '@/lib/errors/ApiError';
 import logger from '@/lib/logging/logger';
@@ -19,9 +18,9 @@ import logger from '@/lib/logging/logger';
  * Soft delete document and remove vectors from Pinecone
  * Rate Limited: 50/min (all tiers)
  */
-async function deleteDocumentHandler(
+export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 1. Require authentication
@@ -29,7 +28,7 @@ async function deleteDocumentHandler(
     const userId = user.id;
 
     // 2. Get document ID from params
-    const documentId = context.params.id;
+    const { id: documentId } = await params;
 
     logger.info('[DOCUMENTS Delete] Request received', {
       documentId,
@@ -59,7 +58,6 @@ async function deleteDocumentHandler(
     logger.error('[DOCUMENTS Delete] Error', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      documentId: context.params.id,
     });
 
     // Handle specific errors
@@ -127,10 +125,3 @@ async function deleteDocumentHandler(
     );
   }
 }
-
-/**
- * Export DELETE with rate limiting wrapper
- *
- * Rate limits: 50/min (all tiers)
- */
-export const DELETE = withRateLimit('documents:delete', deleteDocumentHandler);

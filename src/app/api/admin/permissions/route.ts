@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin, getCurrentUser } from "@/lib/auth-utils";
+import logger from "@/lib/logging/logger";
 
 // POST /api/admin/permissions - Grant agent access to user
 export async function POST(request: NextRequest) {
@@ -61,7 +62,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ permission });
   } catch (error) {
-    console.error("Error granting permission:", error);
+    logger.error("Error granting permission", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to grant permission" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -96,7 +99,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error revoking permission:", error);
+    logger.error("Error revoking permission", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to revoke permission" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
-import { SubscriptionTier } from "@prisma/client";
+import { SubscriptionTier, Prisma } from "@prisma/client";
+import logger from "@/lib/logging/logger";
 
 // GET /api/admin/users/[userId]/limits - Get user limits
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     await requireAdmin();
 
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -35,7 +37,10 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error("Error fetching user limits:", error);
+    logger.error("Error fetching user limits", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId,
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch user limits" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -46,8 +51,9 @@ export async function GET(
 // PATCH /api/admin/users/[userId]/limits - Update user limits
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     await requireAdmin();
 
@@ -56,7 +62,7 @@ export async function PATCH(
 
     // Validar que el usuario existe
     const existingUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     });
 
     if (!existingUser) {
@@ -66,7 +72,7 @@ export async function PATCH(
     // Construir el objeto de actualización
     const updateData: {
       subscriptionTier?: SubscriptionTier;
-      customLimits?: any;
+      customLimits?: Prisma.InputJsonValue;
     } = {};
 
     if (subscriptionTier !== undefined) {
@@ -74,7 +80,7 @@ export async function PATCH(
     }
 
     // Actualizar customLimits con los nuevos valores
-    const currentLimits = existingUser.customLimits as any || {};
+    const currentLimits = (existingUser.customLimits as Record<string, unknown>) || {};
     const newCustomLimits = { ...currentLimits };
 
     if (monthlyMessageLimit !== undefined) {
@@ -85,10 +91,10 @@ export async function PATCH(
       newCustomLimits.monthlyTokenLimit = monthlyTokenLimit === null ? null : monthlyTokenLimit;
     }
 
-    updateData.customLimits = newCustomLimits;
+    updateData.customLimits = newCustomLimits as Prisma.InputJsonValue;
 
     const user = await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: updateData,
       select: {
         id: true,
@@ -109,7 +115,9 @@ export async function PATCH(
       }
     });
   } catch (error) {
-    console.error("Error updating user limits:", error);
+    logger.error("Error updating user limits", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update user limits" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

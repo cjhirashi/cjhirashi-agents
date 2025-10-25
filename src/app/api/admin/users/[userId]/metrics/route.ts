@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
+import logger from "@/lib/logging/logger";
 
 // GET /api/admin/users/[userId]/metrics - Get user usage metrics
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
+  const { userId } = await params;
   try {
     await requireAdmin();
 
     // Verificar que el usuario existe
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -39,14 +41,14 @@ export async function GET(
     ] = await Promise.all([
       // Total de sesiones
       prisma.chatSession.count({
-        where: { userId: params.userId },
+        where: { userId: userId },
       }),
 
       // Total de conversaciones
       prisma.conversation.count({
         where: {
           chatSession: {
-            userId: params.userId,
+            userId: userId,
           },
         },
       }),
@@ -56,7 +58,7 @@ export async function GET(
         where: {
           conversation: {
             chatSession: {
-              userId: params.userId,
+              userId: userId,
             },
           },
         },
@@ -64,12 +66,12 @@ export async function GET(
 
       // Total de agentes creados
       prisma.agent.count({
-        where: { createdBy: params.userId },
+        where: { createdBy: userId },
       }),
 
       // Últimas 30 sesiones para gráfica de actividad
       prisma.chatSession.findMany({
-        where: { userId: params.userId },
+        where: { userId: userId },
         select: {
           id: true,
           startedAt: true,
@@ -104,7 +106,7 @@ export async function GET(
       FROM messages m
       INNER JOIN conversations c ON m."conversationId" = c.id
       INNER JOIN chat_sessions cs ON c."chatSessionId" = cs.id
-      WHERE cs."userId" = ${params.userId}
+      WHERE cs."userId" = ${userId}
         AND m.timestamp >= ${thirtyDaysAgo}
       GROUP BY DATE(m.timestamp)
       ORDER BY date ASC
@@ -112,7 +114,7 @@ export async function GET(
 
     // Calcular uso de tokens por agente (simulado - necesitarías una tabla de tracking real)
     const agentUsage = await prisma.agent.findMany({
-      where: { createdBy: params.userId },
+      where: { createdBy: userId },
       select: {
         id: true,
         name: true,
@@ -146,7 +148,7 @@ export async function GET(
       UNLIMITED: { messages: null, tokens: null },
     };
 
-    const customLimits = user.customLimits as any;
+    const customLimits = user.customLimits as Record<string, unknown> | null;
     const defaultLimits = tierLimits[user.subscriptionTier] || tierLimits.FREE;
 
     const monthlyMessageLimit = customLimits?.monthlyMessageLimit ?? defaultLimits.messages;
@@ -205,7 +207,10 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching user metrics:", error);
+    logger.error("Error fetching user metrics", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId: userId,
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch user metrics" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

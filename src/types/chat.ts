@@ -20,7 +20,7 @@ export interface ChatSession {
   startedAt: Date;
   lastActivity: Date;
   messageCount: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -34,7 +34,7 @@ export interface ChatMessage {
   tokensInput?: number;
   tokensOutput?: number;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

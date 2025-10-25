@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-
+import logger from "@/lib/logging/logger";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/support/tickets/[ticketId] - Obtener un ticket con todos sus mensajes
 export async function GET(
   request: NextRequest,
-  { params }: { params: { ticketId: string } }
+  { params }: { params: Promise<{ ticketId: string }> }
 ) {
+  const { ticketId } = await params;
   try {
     const session = await auth();
 
@@ -16,7 +17,7 @@ export async function GET(
     }
 
     const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.ticketId },
+      where: { id: ticketId },
       include: {
         user: {
           select: {
@@ -56,7 +57,10 @@ export async function GET(
 
     return NextResponse.json({ ticket });
   } catch (error) {
-    console.error("Error fetching ticket:", error);
+    logger.error("Error fetching ticket", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      ticketId,
+    });
     return NextResponse.json(
       { error: "Failed to fetch ticket" },
       { status: 500 }

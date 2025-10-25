@@ -23,7 +23,7 @@ export interface ApiErrorResponse {
     statusCode: number;
     timestamp: string;
     requestId: string;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
   };
 }
 
@@ -35,7 +35,7 @@ export class ApiError extends Error {
     public message: string,
     public statusCode: number,
     public code: string = 'INTERNAL_ERROR',
-    public details?: Record<string, any>
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'ApiError';
@@ -63,7 +63,7 @@ export class ApiError extends Error {
  * Format Zod validation errors
  */
 function formatZodError(error: ZodError): string {
-  const firstError = error.errors[0];
+  const firstError = error.issues[0];
   if (!firstError) return 'Validation failed';
 
   const field = firstError.path.join('.');
@@ -88,13 +88,13 @@ export function handleError(error: unknown, requestId: string): NextResponse<Api
 
     logger.warn('Validation error', {
       requestId,
-      error: error.errors,
+      error: error.issues,
       message: formattedMessage,
     });
 
     return NextResponse.json(
       new ApiError(formattedMessage, 400, 'VALIDATION_ERROR', {
-        issues: error.errors,
+        issues: error.issues,
       }).toJSON(requestId),
       { status: 400 }
     );
@@ -125,7 +125,7 @@ export function handleError(error: unknown, requestId: string): NextResponse<Api
 
   // Prisma Errors
   if (error && typeof error === 'object' && 'code' in error) {
-    const prismaError = error as { code: string; meta?: any };
+    const prismaError = error as { code: string; meta?: { target?: string[] } };
 
     // Unique constraint violation
     if (prismaError.code === 'P2002') {
@@ -200,9 +200,9 @@ export function handleError(error: unknown, requestId: string): NextResponse<Api
  * Wraps async route handlers to catch errors
  */
 export function withErrorHandling<T>(
-  handler: (req: Request, context?: any) => Promise<NextResponse<T>>
+  handler: (req: Request, context?: Record<string, unknown>) => Promise<NextResponse<T>>
 ) {
-  return async (req: Request, context?: any): Promise<NextResponse<T | ApiErrorResponse>> => {
+  return async (req: Request, context?: Record<string, unknown>): Promise<NextResponse<T | ApiErrorResponse>> => {
     const requestId = generateRequestId();
 
     try {
@@ -240,7 +240,7 @@ export const Errors = {
     new ApiError(`${resource} not found`, 404, 'RESOURCE_NOT_FOUND', { resource }),
 
   // Validation
-  VALIDATION_FAILED: (message: string, details?: Record<string, any>) =>
+  VALIDATION_FAILED: (message: string, details?: Record<string, unknown>) =>
     new ApiError(message, 400, 'VALIDATION_ERROR', details),
 
   // Rate Limiting

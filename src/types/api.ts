@@ -7,7 +7,7 @@
 /**
  * Standard API Response Wrapper
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   meta: {
     timestamp: string;
@@ -19,7 +19,7 @@ export interface ApiResponse<T = any> {
 /**
  * Paginated Response
  */
-export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T[]> {
   meta: ApiResponse['meta'] & {
     pagination: {
       total: number;
@@ -33,7 +33,7 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
 /**
  * Cursor-based Paginated Response
  */
-export interface CursorPaginatedResponse<T = any> extends ApiResponse<T[]> {
+export interface CursorPaginatedResponse<T = unknown> extends ApiResponse<T[]> {
   meta: ApiResponse['meta'] & {
     pagination: {
       limit: number;

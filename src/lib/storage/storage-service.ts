@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { prisma } from '@/lib/prisma';
+import logger from '@/lib/logging/logger';
 import type {
   StorageProvider,
   FileAccessLevel,
@@ -167,7 +168,12 @@ export class StorageService {
 
     // 11. Procesar thumbnail si se solicita (async, no bloqueante)
     if (generateThumbnail && mimeType.startsWith('image/')) {
-      this.generateThumbnailAsync(fileRecord.id).catch(console.error);
+      this.generateThumbnailAsync(fileRecord.id).catch((error) => {
+        logger.error('Failed to generate thumbnail', {
+          fileId: fileRecord.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      });
     }
 
     return {
@@ -208,12 +214,12 @@ export class StorageService {
     // 4. Desencriptar si es necesario
     let stream = downloadResult.stream;
     if (fileRecord.encrypted && fileRecord.metadata) {
-      const encryptionData = (fileRecord.metadata as any).encryption;
+      const encryptionData = (fileRecord.metadata as Record<string, unknown>).encryption as { iv?: string; authTag?: string };
       if (encryptionData?.iv && encryptionData?.authTag) {
         // Para streams, necesitaríamos implementar decryptStream
         // Por ahora, convertir a buffer (no óptimo para archivos grandes)
         const chunks: Uint8Array[] = [];
-        // @ts-ignore - ReadableStream type mismatch
+        // @ts-expect-error - ReadableStream type mismatch
         const reader = stream.getReader();
 
         while (true) {
@@ -235,7 +241,7 @@ export class StorageService {
             controller.enqueue(decryptedBuffer);
             controller.close();
           },
-        }) as any;
+        }) as ReadableStream<Uint8Array>;
       }
     }
 
@@ -283,7 +289,12 @@ export class StorageService {
     await this.logFileAccess(fileId, userId, 'DELETE');
 
     // 6. Eliminar físicamente del storage (async, no bloqueante)
-    this.deletePhysicalFileAsync(fileRecord.storagePath).catch(console.error);
+    this.deletePhysicalFileAsync(fileRecord.storagePath).catch((error) => {
+      logger.error('Failed to delete physical file', {
+        storagePath: fileRecord.storagePath,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    });
   }
 
   /**
@@ -293,7 +304,10 @@ export class StorageService {
     try {
       await this.adapter.delete(storagePath);
     } catch (error) {
-      console.error(`Failed to delete physical file: ${storagePath}`, error);
+      logger.error('Failed to delete physical file', {
+        storagePath,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -318,7 +332,7 @@ export class StorageService {
     } = options;
 
     // Construir filtros
-    const where: any = {
+    const where: Record<string, unknown> = {
       userId,
       deletedAt: null,
     };
@@ -614,7 +628,7 @@ export class StorageService {
    * Verifica si un usuario tiene acceso a un archivo
    */
   private async checkFileAccess(
-    file: any,
+    file: { userId: string; accessLevel: string },
     userId: string,
     action: 'view' | 'download' | 'delete'
   ): Promise<void> {
@@ -672,7 +686,12 @@ export class StorageService {
         },
       });
     } catch (error) {
-      console.error('Failed to log file access:', error);
+      logger.error('Failed to log file access', {
+        fileId,
+        userId,
+        action,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -698,13 +717,38 @@ export class StorageService {
    */
   private async generateThumbnailAsync(fileId: string): Promise<void> {
     // TODO: Implementar generación de thumbnails
-    console.log(`Generating thumbnail for file ${fileId}`);
+    logger.info('Generating thumbnail for file', { fileId });
   }
 
   /**
    * Mapea registro de DB a FileMetadata
    */
-  private mapToFileMetadata(record: any): FileMetadata {
+  private mapToFileMetadata(record: {
+    id: string;
+    filename: string;
+    originalName: string;
+    storagePath: string;
+    storageProvider: string;
+    mimeType: string;
+    size: bigint;
+    checksum: string;
+    userId: string;
+    folderId?: string | null;
+    accessLevel: string;
+    usageContext: string;
+    encrypted: boolean;
+    encryptionKeyId?: string | null;
+    isProcessed: boolean;
+    processingStatus?: string | null;
+    thumbnailPath?: string | null;
+    metadata?: unknown | null;
+    virusScanStatus?: string | null;
+    virusScanDate?: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+    expiresAt?: Date | null;
+  }): FileMetadata {
     return {
       id: record.id,
       filename: record.filename,
@@ -723,7 +767,7 @@ export class StorageService {
       isProcessed: record.isProcessed,
       processingStatus: record.processingStatus,
       thumbnailPath: record.thumbnailPath,
-      metadata: record.metadata as Record<string, any> | null,
+      metadata: record.metadata as Record<string, unknown> | null,
       virusScanStatus: record.virusScanStatus,
       virusScanDate: record.virusScanDate,
       createdAt: record.createdAt,
@@ -736,7 +780,18 @@ export class StorageService {
   /**
    * Mapea registro de DB a QuotaInfo
    */
-  private mapToQuotaInfo(record: any): QuotaInfo {
+  private mapToQuotaInfo(record: {
+    id: string;
+    userId: string;
+    maxStorage: bigint;
+    maxFileSize: bigint;
+    maxFiles: number;
+    usedStorage: bigint;
+    fileCount: number;
+    usageBreakdown?: unknown | null;
+    subscriptionTier: string;
+    lastCalculated: Date;
+  }): QuotaInfo {
     return {
       id: record.id,
       userId: record.userId,

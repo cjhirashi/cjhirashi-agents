@@ -14,6 +14,7 @@
  */
 
 import { Redis } from '@upstash/redis';
+import logger from '@/lib/logging/logger';
 
 /**
  * Token bucket configuration
@@ -85,13 +86,21 @@ export class TokenBucket {
           token: process.env.UPSTASH_REDIS_TOKEN
         });
 
-        console.log('[TokenBucket] Initialized with Redis storage');
+        logger.info('TokenBucket storage initialized', {
+          storage: 'Redis',
+        });
       } catch (error) {
-        console.warn('[TokenBucket] Failed to initialize Redis, falling back to memory:', error);
+        logger.warn('TokenBucket Redis connection failed', {
+          fallback: 'memory',
+          redisUrl: process.env.UPSTASH_REDIS_URL ? 'configured' : 'not configured',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
         this.useRedis = false;
       }
     } else {
-      console.log('[TokenBucket] Initialized with in-memory storage');
+      logger.info('TokenBucket storage initialized', {
+        storage: 'Memory',
+      });
       this.useRedis = false;
     }
   }
@@ -184,7 +193,10 @@ export class TokenBucket {
           return data;
         }
       } catch (error) {
-        console.error('[TokenBucket] Redis get error, falling back to memory:', error);
+        logger.error('TokenBucket Redis get error', {
+          fallback: 'memory',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
 
@@ -216,7 +228,10 @@ export class TokenBucket {
         });
         return;
       } catch (error) {
-        console.error('[TokenBucket] Redis set error, falling back to memory:', error);
+        logger.error('TokenBucket Redis set error', {
+          fallback: 'memory',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
 
@@ -239,7 +254,10 @@ export class TokenBucket {
       try {
         await this.redis.del(`rate-limit:${key}`);
       } catch (error) {
-        console.error('[TokenBucket] Redis delete error:', error);
+        logger.error('TokenBucket Redis delete error', {
+          key,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
       }
     }
 

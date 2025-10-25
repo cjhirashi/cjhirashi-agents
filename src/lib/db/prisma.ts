@@ -7,7 +7,8 @@
  * @see https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type Prisma } from '@prisma/client';
+import logger from '@/lib/logging/logger';
 
 // Declare global to prevent TypeScript errors
 declare global {
@@ -16,11 +17,11 @@ declare global {
 }
 
 // Prisma client options
-const prismaOptions = {
+const prismaOptions: Prisma.PrismaClientOptions = {
   log:
     process.env.NODE_ENV === 'development'
-      ? (['query', 'error', 'warn'] as const)
-      : (['error'] as const),
+      ? ['query', 'error', 'warn']
+      : ['error'],
 };
 
 // Create singleton instance
@@ -47,10 +48,12 @@ export async function disconnectPrisma() {
 export async function testDatabaseConnection() {
   try {
     await prisma.$connect();
-    console.log('✅ Database connection successful');
+    logger.info('Database connection successful');
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    logger.error('Database connection failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return false;
   }
 }

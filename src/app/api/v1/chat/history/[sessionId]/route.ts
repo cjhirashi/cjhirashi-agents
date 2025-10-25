@@ -21,13 +21,13 @@ import { requireAuth, requireOwnership } from '@/lib/auth/guards';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
     // 1. Require authentication
     await requireAuth();
 
-    const sessionId = params.sessionId;
+    const { sessionId } = await params;
 
     // 2. Parse query params
     const { searchParams } = new URL(request.url);
@@ -57,7 +57,7 @@ export async function GET(
     await requireOwnership(session.userId);
 
     // 5. Build where clause
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       conversationId: sessionId
     };
 
@@ -81,7 +81,7 @@ export async function GET(
     ]);
 
     // 7. Format messages
-    const formattedMessages = messages.map((msg: any) => ({
+    const formattedMessages = messages.map((msg: { id: string; role: string; content: string; timestamp: Date; tokensInput?: number; tokensOutput?: number; conversation?: { agentId?: string } }) => ({
       id: msg.id,
       role: msg.role,
       content: msg.content,

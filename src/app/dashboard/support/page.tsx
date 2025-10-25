@@ -100,7 +100,7 @@ export default function SupportPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; label: string; icon: any }> = {
+    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; icon: React.ComponentType<{ className?: string }> }> = {
       OPEN: { variant: "default", label: "Abierto", icon: AlertCircle },
       IN_PROGRESS: { variant: "secondary", label: "En Progreso", icon: Clock },
       WAITING_USER: { variant: "outline", label: "Esperando Usuario", icon: MessageCircle },
@@ -113,7 +113,7 @@ export default function SupportPage() {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant as any}>
+      <Badge variant={config.variant}>
         <Icon className="h-3 w-3 mr-1" />
         {config.label}
       </Badge>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
+import logger from "@/lib/logging/logger";
 
 // GET /api/admin/agents - List all agents
 export async function GET() {
@@ -35,7 +36,9 @@ export async function GET() {
 
     return NextResponse.json({ agents });
   } catch (error) {
-    console.error("Error fetching agents:", error);
+    logger.error("Error fetching agents", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch agents" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -67,7 +70,9 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ agent });
   } catch (error) {
-    console.error("Error updating agent:", error);
+    logger.error("Error updating agent", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update agent" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

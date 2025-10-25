@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-
+import logger from "@/lib/logging/logger";
 import { prisma } from "@/lib/prisma";
 import { TicketStatus } from "@prisma/client";
 
 // POST /api/support/tickets/[ticketId]/messages - Enviar un mensaje al ticket
 export async function POST(
   request: NextRequest,
-  { params }: { params: { ticketId: string } }
+  { params }: { params: Promise<{ ticketId: string }> }
 ) {
+  const { ticketId } = await params;
   try {
     const session = await auth();
 
@@ -28,7 +29,7 @@ export async function POST(
 
     // Verificar que el ticket existe
     const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.ticketId },
+      where: { id: ticketId },
       select: {
         id: true,
         userId: true,
@@ -59,7 +60,7 @@ export async function POST(
     // Crear el mensaje
     const message = await prisma.supportMessage.create({
       data: {
-        ticketId: params.ticketId,
+        ticketId: ticketId,
         content,
         isStaff: isAdmin,
         isAI: isAI,
@@ -83,7 +84,7 @@ export async function POST(
 
     if (newStatus !== ticket.status) {
       await prisma.supportTicket.update({
-        where: { id: params.ticketId },
+        where: { id: ticketId },
         data: { status: newStatus },
       });
     }
@@ -93,7 +94,10 @@ export async function POST(
       success: true,
     });
   } catch (error) {
-    console.error("Error sending message:", error);
+    logger.error("Error sending message", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      ticketId: ticketId,
+    });
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 500 }

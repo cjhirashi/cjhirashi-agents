@@ -59,7 +59,7 @@ export class VercelBlobAdapter implements StorageAdapter {
       const checksum = calculateChecksum(buffer);
 
       // Preparar opciones de upload
-      const uploadOptions: any = {
+      const uploadOptions: Record<string, unknown> = {
         access: 'public', // Podría ser configurable según accessLevel
         token: this.token,
       };
@@ -140,7 +140,7 @@ export class VercelBlobAdapter implements StorageAdapter {
       }
 
       return {
-        stream: response.body as any, // ReadableStream
+        stream: response.body as ReadableStream<Uint8Array>, // ReadableStream
         contentType: metadata.contentType,
         contentLength: metadata.size,
         lastModified: metadata.lastModified,
@@ -310,7 +310,7 @@ export class VercelBlobAdapter implements StorageAdapter {
 
       // Convertir stream a buffer
       const chunks: Uint8Array[] = [];
-      // @ts-ignore - ReadableStream type mismatch
+      // @ts-expect-error - ReadableStream type mismatch
       const reader = download.stream.getReader();
 
       while (true) {

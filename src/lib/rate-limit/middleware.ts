@@ -198,7 +198,7 @@ function addRateLimitHeaders(
  * @param handler - Route handler function
  * @returns Wrapped handler with rate limiting
  */
-export function withRateLimit<T = any>(
+export function withRateLimit<T = Record<string, unknown>>(
   endpoint: RateLimitEndpoint,
   handler: (request: Request, context?: T) => Promise<Response>
 ) {
@@ -274,7 +274,7 @@ export function withRateLimit<T = any>(
  * @param handler - Route handler function
  * @returns Wrapped handler with IP-based rate limiting
  */
-export function withRateLimitByIP<T = any>(
+export function withRateLimitByIP<T = Record<string, unknown>>(
   endpoint: RateLimitEndpoint,
   tier: UserTier = 'FREE',
   handler: (request: Request, context?: T) => Promise<Response>

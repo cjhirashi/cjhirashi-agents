@@ -32,7 +32,7 @@ export interface FileMetadata {
   isProcessed: boolean;
   processingStatus?: string | null;
   thumbnailPath?: string | null;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
   virusScanStatus?: string | null;
   virusScanDate?: Date | null;
   createdAt: Date;
@@ -99,7 +99,7 @@ export interface UploadOptions {
   encrypt?: boolean;
   generateThumbnail?: boolean;
   expiresAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UploadResult {

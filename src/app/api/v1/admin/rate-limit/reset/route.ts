@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
           success: true,
           userId: validated.userId,
           endpoint,
-          tiersReset,
+          tiersToReset,
           resetBy: admin.id,
           resetAt: new Date().toISOString()
         },

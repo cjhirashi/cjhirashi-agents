@@ -4,7 +4,7 @@
  * Tests the routing algorithm, scoring functions, and fallback strategy.
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { routeToModel, createRoutingContext } from '@/lib/ai/router';
 import type { RoutingContext, SystemMetrics } from '@/types/llm';
 

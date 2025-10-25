@@ -108,7 +108,7 @@ export function ShareDialog({
           </div>
 
           <p className="text-gray-600 mb-4">
-            El enlace de compartición para "{fileName}" ha sido creado exitosamente.
+            El enlace de compartición para &ldquo;{fileName}&rdquo; ha sido creado exitosamente.
           </p>
 
           {/* URL Box */}

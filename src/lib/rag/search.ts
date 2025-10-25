@@ -156,7 +156,7 @@ export async function semanticSearch(
 
     const enrichedResults: SearchResult[] = await Promise.all(
       filteredResults.map(async ([doc, score]) => {
-        const metadata = doc.metadata as any;
+        const metadata = doc.metadata as Record<string, unknown>;
 
         // Get document info from database (optional - for additional metadata)
         let documentInfo = null;

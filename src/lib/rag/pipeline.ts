@@ -11,12 +11,11 @@
  * @module lib/rag/pipeline
  */
 
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { PDFLoader } from 'langchain/document_loaders/fs/pdf';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { PineconeStore } from '@langchain/pinecone';
-import { Document as LangChainDocument } from 'langchain/document';
+import { Document as LangChainDocument } from '@langchain/core/documents';
 import { put } from '@vercel/blob';
 import prisma from '@/lib/db/prisma';
 import { getPineconeIndex } from '@/lib/pinecone';
@@ -300,8 +299,8 @@ export async function processDocument(
  *
  * Supported formats:
  * - application/pdf (using PDFLoader)
- * - text/plain (using TextLoader)
- * - text/markdown (using TextLoader)
+ * - text/plain (direct read)
+ * - text/markdown (direct read)
  *
  * @param file - File to extract text from
  * @param blobUrl - URL of uploaded blob
@@ -316,24 +315,21 @@ async function extractText(file: File, blobUrl: string): Promise<string> {
   });
 
   try {
-    let loader: PDFLoader | TextLoader;
+    let extractedText: string;
 
     if (mimeType === 'application/pdf') {
       // Use PDFLoader for PDFs
       const arrayBuffer = await file.arrayBuffer();
       const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      loader = new PDFLoader(blob);
+      const loader = new PDFLoader(blob);
+      const docs = await loader.load();
+      extractedText = docs.map((doc) => doc.pageContent).join('\n\n');
     } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
-      // Use TextLoader for text files
-      const text = await file.text();
-      const blob = new Blob([text], { type: mimeType });
-      loader = new TextLoader(blob);
+      // Direct read for text files
+      extractedText = await file.text();
     } else {
       throw new Error(`Unsupported mime type: ${mimeType}`);
     }
-
-    const docs = await loader.load();
-    const extractedText = docs.map((doc) => doc.pageContent).join('\n\n');
 
     logger.info('[RAG Pipeline] Text extraction successful', {
       textLength: extractedText.length,

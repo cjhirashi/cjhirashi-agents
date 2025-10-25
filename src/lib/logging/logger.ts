@@ -93,7 +93,7 @@ const logger = winston.createLogger({
  * PII Redaction Helper
  * Redacts sensitive fields from objects before logging
  */
-export function redactPII<T extends Record<string, any>>(obj: T): T {
+export function redactPII<T extends Record<string, unknown>>(obj: T): T {
   const sensitiveFields = [
     'password',
     'token',
@@ -114,9 +114,9 @@ export function redactPII<T extends Record<string, any>>(obj: T): T {
         // Partially redact email (keep first 2 chars + domain)
         const email = redacted[key] as string;
         const [local, domain] = email.split('@');
-        redacted[key] = `${local.substring(0, 2)}***@${domain}` as any;
+        redacted[key] = `${local.substring(0, 2)}***@${domain}` as T[Extract<keyof T, string>];
       } else {
-        redacted[key] = '[REDACTED]' as any;
+        redacted[key] = '[REDACTED]' as T[Extract<keyof T, string>];
       }
     }
   }
@@ -127,7 +127,7 @@ export function redactPII<T extends Record<string, any>>(obj: T): T {
 /**
  * Create child logger with additional context
  */
-export function createChildLogger(context: Record<string, any>) {
+export function createChildLogger(context: Record<string, unknown>) {
   return logger.child(context);
 }
 
@@ -137,7 +137,7 @@ export function createChildLogger(context: Record<string, any>) {
 export function logWithRequest(
   level: 'debug' | 'info' | 'warn' | 'error' | 'fatal',
   message: string,
-  metadata: Record<string, any> = {},
+  metadata: Record<string, unknown> = {},
   requestId?: string
 ) {
   logger.log(level, message, {
@@ -155,6 +155,6 @@ export const { debug, info, warn, error } = logger;
 /**
  * Fatal error (system down)
  */
-export function fatal(message: string, metadata: Record<string, any> = {}) {
+export function fatal(message: string, metadata: Record<string, unknown> = {}) {
   logger.log('fatal', message, metadata);
 }

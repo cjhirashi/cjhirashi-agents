@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-
+import logger from "@/lib/logging/logger";
 import { prisma } from "@/lib/prisma";
 import { TicketCategory, TicketPriority, TicketStatus } from "@prisma/client";
 import { generateAISupportResponse, canAIResolve } from "@/lib/support-ai";
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const isAdmin = session.user.role === "ADMIN";
 
     // Construir filtros
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (!isAdmin) {
       // Usuarios normales solo ven sus propios tickets
@@ -89,7 +89,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ tickets });
   } catch (error) {
-    console.error("Error fetching tickets:", error);
+    logger.error("Error fetching tickets", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: "Failed to fetch tickets" },
       { status: 500 }
@@ -172,7 +174,9 @@ export async function POST(request: NextRequest) {
         });
       }
     } catch (aiError) {
-      console.error("Error generating AI response:", aiError);
+      logger.error("Error generating AI response", {
+        error: aiError instanceof Error ? aiError.message : 'Unknown error',
+      });
       // No fallar la creación del ticket si falla la IA
     }
 
@@ -201,7 +205,9 @@ export async function POST(request: NextRequest) {
       message: "Ticket created successfully",
     });
   } catch (error) {
-    console.error("Error creating ticket:", error);
+    logger.error("Error creating ticket", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: "Failed to create ticket" },
       { status: 500 }
@@ -229,7 +235,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Construir datos de actualización
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (status !== undefined) {
       updateData.status = status as TicketStatus;
@@ -284,7 +290,9 @@ export async function PATCH(request: NextRequest) {
       message: "Ticket updated successfully",
     });
   } catch (error) {
-    console.error("Error updating ticket:", error);
+    logger.error("Error updating ticket", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: "Failed to update ticket" },
       { status: 500 }

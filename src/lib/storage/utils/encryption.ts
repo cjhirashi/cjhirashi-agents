@@ -201,7 +201,7 @@ export function decryptFile(
  * Encripta metadata sensible (JSON)
  */
 export function encryptMetadata(
-  metadata: Record<string, any>,
+  metadata: Record<string, unknown>,
   key?: Buffer
 ): string {
   try {
@@ -232,7 +232,7 @@ export function encryptMetadata(
 export function decryptMetadata(
   encryptedString: string,
   key?: Buffer
-): Record<string, any> {
+): Record<string, unknown> {
   try {
     const encrypted = JSON.parse(encryptedString);
 

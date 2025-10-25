@@ -67,11 +67,17 @@ type Ticket = {
 export default function TicketDetailPage({
   params,
 }: {
-  params: { ticketId: string };
+  params: Promise<{ ticketId: string }>;
 }) {
   const { data: session } = useSession();
   const router = useRouter();
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [ticketId, setTicketId] = useState<string | null>(null);
+
+  // Unwrap params Promise
+  useEffect(() => {
+    params.then((p) => setTicketId(p.ticketId));
+  }, [params]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState("");
@@ -84,15 +90,16 @@ export default function TicketDetailPage({
     // Polling cada 5 segundos para actualizar mensajes
     const interval = setInterval(loadTicket, 5000);
     return () => clearInterval(interval);
-  }, [params.ticketId]);
+  }, [ticketId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [ticket?.messages]);
 
   const loadTicket = async () => {
+    if (!ticketId) return;
     try {
-      const res = await fetch(`/api/support/tickets/${params.ticketId}`);
+      const res = await fetch(`/api/support/tickets/${ticketId}`);
       if (!res.ok) throw new Error("Failed to fetch ticket");
 
       const data = await res.json();
@@ -115,7 +122,7 @@ export default function TicketDetailPage({
 
     setSending(true);
     try {
-      const res = await fetch(`/api/support/tickets/${params.ticketId}/messages`, {
+      const res = await fetch(`/api/support/tickets/${ticketId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: message }),
@@ -141,7 +148,7 @@ export default function TicketDetailPage({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticketId: params.ticketId,
+          ticketId: ticketId!,
           status: newStatus,
         }),
       });
@@ -156,7 +163,7 @@ export default function TicketDetailPage({
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; label: string; icon: any }> = {
+    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string; icon: React.ComponentType<{ className?: string }> }> = {
       OPEN: { variant: "default", label: "Abierto", icon: AlertCircle },
       IN_PROGRESS: { variant: "secondary", label: "En Progreso", icon: Clock },
       WAITING_USER: { variant: "outline", label: "Esperando Usuario", icon: Clock },
@@ -169,7 +176,7 @@ export default function TicketDetailPage({
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant as any}>
+      <Badge variant={config.variant}>
         <Icon className="h-3 w-3 mr-1" />
         {config.label}
       </Badge>

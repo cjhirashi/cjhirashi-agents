@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth-utils";
 import { UserRole } from "@prisma/client";
+import logger from "@/lib/logging/logger";
 
 // GET /api/admin/users - List all users
 export async function GET() {
@@ -37,7 +38,9 @@ export async function GET() {
 
     return NextResponse.json({ users });
   } catch (error) {
-    console.error("Error fetching users:", error);
+    logger.error("Error fetching users", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch users" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -75,7 +78,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error updating user:", error);
+    logger.error("Error updating user", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update user" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -140,7 +145,9 @@ export async function DELETE(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error deleting user:", error);
+    logger.error("Error deleting user", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to delete user" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

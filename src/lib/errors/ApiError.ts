@@ -8,13 +8,13 @@ export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
   public readonly timestamp: string;
-  public readonly details?: any;
+  public readonly details?: Record<string, unknown>;
 
   constructor(
     message: string,
     statusCode: number = 500,
     code: string = 'INTERNAL_SERVER_ERROR',
-    details?: any
+    details?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'ApiError';
@@ -63,11 +63,11 @@ export class ApiErrors {
     return new ApiError(message, 403, 'FORBIDDEN');
   }
 
-  static badRequest(message: string, details?: any) {
+  static badRequest(message: string, details?: Record<string, unknown>) {
     return new ApiError(message, 400, 'BAD_REQUEST', details);
   }
 
-  static validation(message: string, details?: any) {
+  static validation(message: string, details?: Record<string, unknown>) {
     return new ApiError(message, 400, 'VALIDATION_ERROR', details);
   }
 

@@ -1,0 +1,32 @@
+
+> temp-next@0.1.0 prebuild
+> npm run validate:env
+
+
+> temp-next@0.1.0 validate:env
+> tsx scripts/validate-env.ts
+
+🔍 Validating environment variables...
+
+
+📌 Optional variables:
+
+❌ Missing required environment variables:
+
+❌ NEXTAUTH_SECRET: Required for NextAuth JWT signing
+❌ NEXTAUTH_URL: Required for NextAuth OAuth redirects
+❌ DATABASE_URL: Required for Prisma database connection
+❌ ANTHROPIC_API_KEY: Required for Claude models (optional if using others)
+❌ OPENAI_API_KEY: Required for GPT models (optional if using others)
+❌ GOOGLE_GENERATIVE_AI_API_KEY: Required for Gemini models (optional if using others)
+❌ DEEPSEEK_API_KEY: Required for DeepSeek models (optional if using others)
+❌ PINECONE_API_KEY: Required for RAG document storage
+❌ PINECONE_ENVIRONMENT: Required for Pinecone connection
+❌ PINECONE_INDEX_NAME: Required for Pinecone index
+❌ PINECONE_NAMESPACE: Required for Pinecone namespace
+❌ PINECONE_DIMENSION: Required for embeddings dimension (1536 for OpenAI)
+❌ UPSTASH_REDIS_URL: Required for production rate limiting
+❌ UPSTASH_REDIS_TOKEN: Required for Upstash Redis authentication
+❌ BLOB_READ_WRITE_TOKEN: Required for Vercel Blob storage
+
+💡 Copy .env.example to .env.local and fill in the values

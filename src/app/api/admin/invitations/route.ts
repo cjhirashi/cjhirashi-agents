@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { auth } from "@/lib/auth";
 import { UserRole, InvitationStatus } from "@prisma/client";
 import crypto from "crypto";
+import logger from "@/lib/logging/logger";
 
 // GET /api/admin/invitations - List all invitations
 export async function GET() {
@@ -27,7 +28,9 @@ export async function GET() {
 
     return NextResponse.json({ invitations });
   } catch (error) {
-    console.error("Error fetching invitations:", error);
+    logger.error("Error fetching invitations", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch invitations" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -122,7 +125,9 @@ export async function POST(request: NextRequest) {
       message: "Invitation created successfully",
     });
   } catch (error) {
-    console.error("Error creating invitation:", error);
+    logger.error("Error creating invitation", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create invitation" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }
@@ -164,7 +169,9 @@ export async function DELETE(request: NextRequest) {
       message: "Invitation cancelled successfully",
     });
   } catch (error) {
-    console.error("Error cancelling invitation:", error);
+    logger.error("Error cancelling invitation", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to cancel invitation" },
       { status: error instanceof Error && error.message.includes("Unauthorized") ? 403 : 500 }

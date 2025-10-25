@@ -19,6 +19,7 @@ import type {
 import { logRoutingAttempt } from './router';
 import { calculateCost } from './tokens';
 import { MODELS } from './models';
+import logger from '@/lib/logging/logger';
 
 /**
  * Timeout duration (30 seconds)
@@ -127,7 +128,7 @@ async function callLLM(
       prompt: request.prompt,
       system: request.systemPrompt,
       temperature: request.temperature || 0.7,
-      maxTokens: request.maxTokens || 4096,
+      // Note: maxTokens not supported in current AI SDK version, using model defaults
     });
 
     // Race against timeout
@@ -140,9 +141,11 @@ async function callLLM(
     const latency = endTime - startTime;
 
     // Calculate cost
-    const inputTokens = result.usage.promptTokens;
-    const outputTokens = result.usage.completionTokens;
-    const totalTokens = result.usage.totalTokens;
+    // @ts-expect-error - AI SDK usage types are inconsistent across versions
+    const inputTokens = result.usage.promptTokens || result.usage.inputTokens || 0;
+    // @ts-expect-error - AI SDK usage types are inconsistent across versions
+    const outputTokens = result.usage.completionTokens || result.usage.outputTokens || 0;
+    const totalTokens = inputTokens + outputTokens;
 
     // Use average cost for simplicity (in production, use separate input/output costs)
     const cost = calculateCost(totalTokens, config.costPer1kTokens);
@@ -160,11 +163,16 @@ async function callLLM(
     const endTime = Date.now();
     const latency = endTime - startTime;
 
-    throw new Error(
-      `LLM call failed (${model}): ${
-        error instanceof Error ? error.message : 'Unknown error'
-      } [latency: ${latency}ms]`
-    );
+    // Log internally with full details
+    logger.error('LLM call failed', {
+      model,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      latency,
+      requestId: request.prompt.substring(0, 50),
+    });
+
+    // Throw sanitized error (no internal info leakage)
+    throw new Error('AI service temporarily unavailable. Please try again.');
   }
 }
 
@@ -221,11 +229,12 @@ export async function callModelWithFallback(
         attempt: i + 1,
       });
 
-      console.error(
-        `[LLM Router] Model ${model} failed (attempt ${
-          i + 1
-        }/${MAX_ATTEMPTS}): ${lastError.message}`
-      );
+      logger.error('LLM model call failed', {
+        model,
+        error: lastError.message,
+        attempt: i + 1,
+        maxAttempts: MAX_ATTEMPTS,
+      });
 
       // Continue to next fallback
     }

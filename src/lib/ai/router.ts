@@ -17,6 +17,7 @@ import type {
 } from '@/types/llm';
 import { MODELS, isValidModel } from './models';
 import { estimateTokens } from './tokens';
+import logger from '@/lib/logging/logger';
 
 /**
  * Weights for hybrid scoring
@@ -231,8 +232,8 @@ export function logRoutingAttempt(data: {
   error?: string;
   attempt: number;
 }): void {
-  // In production, send to logging service
-  console.log('[LLM Router]', {
+  // Log routing attempt for monitoring/debugging
+  logger.info('LLM routing attempt', {
     timestamp: new Date().toISOString(),
     ...data,
   });

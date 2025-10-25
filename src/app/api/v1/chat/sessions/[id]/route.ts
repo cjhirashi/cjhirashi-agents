@@ -18,13 +18,13 @@ import { requireAuth, requireOwnership } from '@/lib/auth/guards';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 1. Require authentication
     await requireAuth();
 
-    const sessionId = params.id;
+    const { id: sessionId } = await params;
 
     logger.info('Get session request', {
       sessionId
@@ -57,13 +57,13 @@ export async function GET(
     let totalMessages = 0;
     let totalTokens = 0;
 
-    const allMessages = session.conversations.flatMap((conv: any) => {
+    const allMessages = session.conversations.flatMap((conv: { messages: Array<{ id: string; role: string; content: string; timestamp: Date; tokensInput?: number; tokensOutput?: number; metadata?: unknown }> }) => {
       totalMessages += conv.messages.length;
-      conv.messages.forEach((msg: any) => {
+      conv.messages.forEach((msg: { tokensInput?: number; tokensOutput?: number }) => {
         totalTokens += (msg.tokensInput || 0) + (msg.tokensOutput || 0);
       });
 
-      return conv.messages.map((msg: any) => ({
+      return conv.messages.map((msg) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
@@ -73,7 +73,7 @@ export async function GET(
       }));
     });
 
-    const metadata = session.metadata as any;
+    const metadata = session.metadata as Record<string, unknown> | null;
 
     logger.info('Session fetched successfully', {
       sessionId,
@@ -140,13 +140,13 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 1. Require authentication
     await requireAuth();
 
-    const sessionId = params.id;
+    const { id: sessionId } = await params;
 
     logger.info('Delete session request', {
       sessionId

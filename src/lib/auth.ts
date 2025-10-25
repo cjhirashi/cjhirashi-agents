@@ -3,7 +3,7 @@
 // Authentication with Credentials, Google, and GitHub
 // ═══════════════════════════════════════════════════════════
 
-import NextAuth, { type DefaultSession } from 'next-auth';
+import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
@@ -11,46 +11,15 @@ import GitHubProvider from 'next-auth/providers/github';
 import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import type { UserRole, SubscriptionTier } from '@prisma/client';
-
-// ═══════════════════════════════════════════════════════════
-// TYPE EXTENSIONS
-// ═══════════════════════════════════════════════════════════
-
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string | null;
-      role: UserRole;
-      tier: SubscriptionTier;
-      isActive: boolean;
-    } & DefaultSession['user'];
-  }
-
-  interface User {
-    role: UserRole;
-    subscriptionTier: SubscriptionTier;
-    isActive: boolean;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    email: string;
-    role: UserRole;
-    tier: SubscriptionTier;
-    isActive: boolean;
-  }
-}
+import authConfig from '../../auth.config';
 
 // ═══════════════════════════════════════════════════════════
 // NEXTAUTH CONFIGURATION
+// Type extensions are in src/types/next-auth.d.ts
 // ═══════════════════════════════════════════════════════════
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as ReturnType<typeof PrismaAdapter>, // Type assertion to resolve @auth/core version conflict
 
   // Use JWT strategy for stateless sessions
   session: {
@@ -58,10 +27,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
+  // Merge edge-compatible config from auth.config.ts
+  ...authConfig,
+
+  // Override pages with additional pages for full config
   pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
+    ...authConfig.pages,
     verifyRequest: '/auth/verify',
     newUser: '/dashboard',
   },
@@ -184,12 +155,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     // Session Callback: Add token data to session
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.email = token.email;
-        session.user.role = token.role;
-        session.user.tier = token.tier;
-        session.user.isActive = token.isActive;
+      if (session.user && token) {
+        // Type assertions to satisfy TypeScript
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.role = token.role as UserRole;
+        session.user.tier = token.tier as SubscriptionTier;
+        session.user.isActive = token.isActive as boolean;
       }
 
       return session;

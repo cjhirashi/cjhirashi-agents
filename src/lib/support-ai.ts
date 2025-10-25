@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import logger from '@/lib/logging/logger';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
@@ -41,7 +42,10 @@ Responde de forma clara y útil:`;
 
     return text;
   } catch (error) {
-    console.error("Error generating AI response:", error);
+    logger.error("Error generating AI support response", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      category,
+    });
     return null;
   }
 }
@@ -82,7 +86,10 @@ Responde SOLO con una palabra: SI o NO`;
 
     return text === "SI";
   } catch (error) {
-    console.error("Error analyzing AI resolution:", error);
+    logger.error("Error analyzing AI resolution", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      category,
+    });
     return false;
   }
 }
@@ -118,7 +125,10 @@ Genera el mensaje:`;
 
     return text;
   } catch (error) {
-    console.error("Error generating AI follow-up:", error);
+    logger.error("Error generating AI follow-up", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      historyLength: ticketHistory.length,
+    });
     return null;
   }
 }

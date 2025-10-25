@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 2. Build limits object for all endpoints
-    const limits: Record<string, any> = {};
+    const limits: Record<string, { maxRequests: number; remaining: number; resetAt: Date | null; period: string }> = {};
 
     for (const endpoint of Object.keys(RATE_LIMIT_CONFIGS) as RateLimitEndpoint[]) {
       const config = RATE_LIMIT_CONFIGS[endpoint][tier];
