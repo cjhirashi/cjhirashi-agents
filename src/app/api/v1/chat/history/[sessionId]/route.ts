@@ -58,30 +58,30 @@ export async function GET(
 
     // 5. Build where clause
     const whereClause: Record<string, unknown> = {
-      conversationId: sessionId
+      sessionId: sessionId
     };
 
     if (validated.before) {
-      whereClause.timestamp = {
+      whereClause.createdAt = {
         lt: validated.before
       };
     }
 
     // 6. Fetch messages with pagination
     const [messages, total] = await Promise.all([
-      prisma.message.findMany({
+      prisma.messages.findMany({
         where: whereClause,
         skip: validated.offset,
         take: validated.limit,
         orderBy: { timestamp: 'asc' }
       }),
-      prisma.message.count({
+      prisma.messages.count({
         where: whereClause
       })
     ]);
 
     // 7. Format messages
-    const formattedMessages = messages.map((msg: { id: string; role: string; content: string; timestamp: Date; tokensInput?: number; tokensOutput?: number; conversation?: { agentId?: string } }) => ({
+    const formattedMessages = messages.map((msg) => ({
       id: msg.id,
       role: msg.role,
       content: msg.content,

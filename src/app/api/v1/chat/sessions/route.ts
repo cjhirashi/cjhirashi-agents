@@ -38,14 +38,14 @@ async function createSessionHandler(request: Request) {
       agentIds: validated.agentIds
     });
 
-    // 4. Create session
+    // 4. Create session (store title and agentIds in metadata)
     const session = await prisma.chatSession.create({
       data: {
         userId,
+        lastActivity: new Date(),
         metadata: {
           title: validated.title || 'New Chat',
-          agentIds: validated.agentIds || [],
-          ...validated.metadata
+          agentIds: validated.agentIds || []
         }
       }
     });
@@ -171,8 +171,7 @@ export async function GET(request: NextRequest) {
         orderBy,
         include: {
           conversations: {
-            select: {
-              id: true,
+            include: {
               _count: {
                 select: { messages: true }
               }
@@ -185,41 +184,26 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    // 5. Format response with last messages
-    const formattedSessions = await Promise.all(
-      sessions.map(async (session) => {
-        const metadata = session.metadata as Record<string, unknown> | null;
+    // 5. Format response
+    const formattedSessions = sessions.map((session) => {
+        // Calculate total message count across all conversations
         const messageCount = session.conversations.reduce(
-          (sum: number, conv: { _count: { messages: number } }) => sum + conv._count.messages,
+          (sum, conv) => sum + conv._count.messages,
           0
         );
 
-        // Get last message from any conversation in this session
-        const conversationIds = session.conversations.map((conv: { id: string }) => conv.id);
-        const lastMessage = await prisma.message.findFirst({
-          where: {
-            conversationId: { in: conversationIds }
-          },
-          orderBy: { createdAt: 'desc' },
-          select: {
-            content: true,
-            createdAt: true,
-            role: true
-          }
-        });
+        // Extract title from metadata
+        const metadata = session.metadata as { title?: string } | null;
+        const title = metadata?.title || 'Untitled Chat';
 
         return {
           id: session.id,
-          title: metadata?.title || 'Untitled Chat',
+          title,
           messageCount,
-          lastMessage: lastMessage?.content || 'No messages yet',
-          lastMessageRole: lastMessage?.role || null,
-          lastMessageAt: lastMessage?.createdAt.toISOString() || session.startedAt.toISOString(),
           lastActivity: session.lastActivity.toISOString(),
-          createdAt: session.startedAt.toISOString()
+          startedAt: session.startedAt.toISOString()
         };
-      })
-    );
+      });
 
     logger.info('Sessions fetched successfully', {
       userId,

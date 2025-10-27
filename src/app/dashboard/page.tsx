@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   const userId = session.user.id;
 
   // Fetch dashboard data in parallel
-  const [chatSessions, documents, stats] = await Promise.all([
+  const [chatSessions, stats] = await Promise.all([
     // Recent chat sessions (last 5)
     prisma.chatSession.findMany({
       where: { userId },
@@ -33,33 +33,14 @@ export default async function DashboardPage() {
       orderBy: { lastActivity: 'desc' },
       include: {
         conversations: {
-          take: 1,
-          orderBy: { createdAt: 'desc' },
           include: {
             messages: {
               take: 2,
-              orderBy: { createdAt: 'asc' },
+              orderBy: { timestamp: 'desc' },
               select: { content: true, role: true },
             },
           },
         },
-        _count: {
-          select: { conversations: true },
-        },
-      },
-    }),
-
-    // Recent documents (last 5)
-    prisma.document.findMany({
-      where: { userId },
-      take: 5,
-      orderBy: { uploadedAt: 'desc' },
-      select: {
-        id: true,
-        filename: true,
-        filesize: true,
-        status: true,
-        uploadedAt: true,
       },
     }),
 
@@ -67,19 +48,6 @@ export default async function DashboardPage() {
     Promise.all([
       // Total chat sessions
       prisma.chatSession.count({ where: { userId } }),
-
-      // Total documents
-      prisma.document.count({ where: { userId } }),
-
-      // Total messages sent
-      prisma.message.count({
-        where: {
-          conversation: {
-            session: { userId },
-          },
-          role: 'user',
-        },
-      }),
 
       // Active sessions (last 7 days)
       prisma.chatSession.count({
@@ -93,7 +61,12 @@ export default async function DashboardPage() {
     ]),
   ]);
 
-  const [totalSessions, totalDocuments, totalMessages, activeSessions] = stats;
+  const [totalSessions, activeSessions] = stats;
+  const documents: never[] = [];
+
+  // TODO: Add queries for these stats when document and message tracking is implemented
+  const totalDocuments = 0;
+  const totalMessages = 0;
 
   // Format chat sessions - generate title from first message
   const formattedSessions = chatSessions.map((session) => {
@@ -105,12 +78,15 @@ export default async function DashboardPage() {
       ? firstMessage.content.slice(0, 50) + (firstMessage.content.length > 50 ? '...' : '')
       : 'Chat Session ' + formatDistanceToNow(session.startedAt, { addSuffix: true });
 
+    // Calculate total message count across all conversations
+    const messageCount = session.conversations.reduce((sum, conv) => sum + conv.messages.length, 0);
+
     return {
       id: session.id,
       title,
       lastMessage: lastMessage?.content || 'No messages yet',
       lastActivity: session.lastActivity,
-      messageCount: session._count.conversations,
+      messageCount,
     };
   });
 

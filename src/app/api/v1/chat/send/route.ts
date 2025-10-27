@@ -86,9 +86,9 @@ async function chatSendHandler(request: Request) {
     }
 
     // 5. Save user message
-    const userMessage = await prisma.message.create({
+    const userMessage = await prisma.messages.create({
       data: {
-        conversationId: validated.sessionId, // Using sessionId as conversationId (simplified)
+        conversationId: validated.sessionId,
         role: 'user',
         content: validated.message,
         metadata: {
@@ -250,7 +250,7 @@ async function chatSendHandler(request: Request) {
           });
 
           // Save assistant message
-          await prisma.message.create({
+          await prisma.messages.create({
             data: {
               conversationId: validated.sessionId,
               role: 'assistant',
@@ -271,7 +271,7 @@ async function chatSendHandler(request: Request) {
             }
           });
 
-          // Update session last activity
+          // Update session last message time
           await prisma.chatSession.update({
             where: { id: validated.sessionId },
             data: { lastActivity: new Date() }

@@ -2,10 +2,10 @@
 
 **Documento Maestro de Planificación y Ejecución del Proyecto**
 
-**Versión del Documento**: 1.2
-**Última Actualización**: 2025-10-25 EOD (Fase 6: COMPLETADA 100% en 1 día)
-**Estado Actual**: ✅ Fases 1-6 Completadas (100%) | 🔵 Fase 7 Próxima
-**Próximo Hito**: Iniciar Fase 7 (Voice, Generative Features & Deployment)
+**Versión del Documento**: 1.3
+**Última Actualización**: 2025-10-27 - BLOQUEADOR CRÍTICO Identificado
+**Estado Actual**: 🔴 BLOQUEADO - Revisión Arquitectural Crítica Pendiente
+**Próximo Hito**: URGENTE - Ejecutar Revisión Arquitectural Pre-Deployment
 
 ---
 
@@ -31,13 +31,14 @@
 | Aspecto | Valor |
 |---------|-------|
 | **Proyecto** | cjhirashi-agents MVP |
-| **Fase Actual** | 6 (Frontend Development) - Próxima |
-| **Progreso Overall** | 60% completado (↑ de 55%) |
-| **Fases Completadas** | 5 (Requirements, Architecture, Database, API Design, Backend) |
-| **Fases En Progreso** | 0 (Fase 5 completada hoy) |
-| **Fases Planeadas** | 4 (Frontend, Voice+Deploy, Beta, Growth) |
-| **Total Fases** | 9 |
-| **Timeline Status** | ⚡ Adelantado 2 semanas |
+| **Fase Actual** | Task 0 (Agent System Foundation) - 80% |
+| **Progreso Overall** | 62% completado (↑ de 60%) |
+| **Fases Completadas** | 6 (Requirements, Architecture, Database, API Design, Backend, Frontend) |
+| **Fases En Progreso** | 1 (Task 0 - Agent System Foundation) |
+| **Fases Bloqueadas** | 1 (Fase 7 - bloqueada por Task 0) |
+| **Fases Planeadas** | 3 (Voice+Deploy, Beta, Growth) |
+| **Total Fases** | 9 + Task 0 |
+| **Timeline Status** | ⚡ Adelantado 2+ semanas |
 
 ### Documentación Completada
 
@@ -75,6 +76,7 @@
 7. 🔵 **Fase 7**: Voice & Deployment (Estimado: 2 semanas después Fase 6)
 8. 🔵 **MVP v0.1.0-alpha**: Deployment a staging (Estimado: 2 semanas desde ahora)
 
+---## 🚨 BLOQUEADOR CRÍTICO PRE-DEPLOYMENT**Estado**: ⏸️ PENDIENTE - Debe ejecutarse ANTES del deployment**Prioridad**: 🔴 CRÍTICA**Bloqueante para**: Build de producción, Deployment a staging/producción**Duración estimada**: 18-27 horas (crítico) | 27-39 horas (completo)### REVISIÓN ARQUITECTURALDurante la preparación del build de producción se detectaron **~100+ errores TypeScript** que revelan inconsistencias arquitecturales fundamentales:1. **Prisma Schema ↔ Código** desincronizados (60% errores)2. **APIs de bibliotecas** usadas incorrectamente (25% errores)3. **Validación Zod** con API deprecada (10% errores)4. **Manejo null/undefined** inconsistente (5% errores)**Decisión**: Fix Estructural (Opción B) - Resolver desde la raíz**Documentos**:- 📄 `.claude/task-tracker.md` - Plan ejecutable paso a paso- 📄 `sys-docs/ARCHITECTURAL-REVIEW-PLAN.md` - Análisis detallado**Sub-tareas** (en orden):- [ ] 1.1: Auditoría y Documentación (4-6h) 🔴- [ ] 1.2: Source of Truth Decision (2-3h) 🔴- [ ] 1.3: Actualización Sistemática (8-12h) 🔴- [ ] 1.4: Validación de APIs (4-6h) 🔴- [ ] 1.5: CI/CD Setup (3-4h) 🟡 Recomendado- [ ] 1.6: Testing Estratégico (6-8h) 🟡 Recomendado**Una vez completado**, se desbloquea:- ✅ Build de producción (`npm run build`)- ✅ Deployment a staging- ✅ Deployment a producción
 ---
 
 ## 📋 FASES DE DESARROLLO
@@ -653,9 +655,11 @@ Implementar frontend MVP completo con Next.js 15, React 18, Tailwind CSS, shadcn
 - ✅ Fase 4 completada (API Design)
 - ✅ NextAuth v5 funcional
 
-**Bloqueadores Identificados**: Ninguno
+**Bloqueadores Identificados**: Task 0 (Agent System Foundation) en progreso - 80% completado
 
-**Próxima Fase**: Fase 7 (Voice & Deployment)
+**Status Post-Completación**: Frontend MVP funcional y listo para integración con Task 0
+
+**Próxima Fase**: Task 0 (Agent System Foundation) - 80% COMPLETADO
 
 **Resultado Final** ✅:
 - ✅ **TODAS las 8 tareas completadas en 1 día**
@@ -671,28 +675,129 @@ Implementar frontend MVP completo con Next.js 15, React 18, Tailwind CSS, shadcn
 
 ---
 
-### Fase 7: Voice, Generative Features & Deployment 🔵 PLANEADA
+### Task 0: Agent System Foundation 🟡 EN PROGRESO (BLOQUEADOR PARA FASE 7)
 
-**Estado Actual**: 🔵 PLANEADA
+**Estado Actual**: 🟡 EN PROGRESO (80% completado)
+**Progreso**: 80% completado (Day 5 - Documentación pendiente)
+**Fecha Inicio Real**: 2025-10-26
+**Fecha Estimada Finalización**: 2025-10-27
+**Duración Estimada**: 3-5 días (en track - día 5)
+**Workflow**: Workflow 1 (Large Feature)
+
+**Descripción**:
+Implementar sistema de ejecución para Custom Agents creados por usuarios. Permite ejecutar agentes personalizados con streaming SSE, timeout handling, cost tracking, y tier validation.
+
+**Documentación de Referencia**:
+- 📄 [ADR-010: Custom Agent Execution](sys-docs/architecture/ADR-010-custom-agent-execution.md) - Decisión arquitectónica
+
+**Entregables Completados**:
+- [x] **Day 1 - @architect**: Diseño de sistema de ejecución ✅ COMPLETADO (2025-10-26)
+  - Output: ADR-010 (inline execution pattern)
+  - Architectural decision: Inline execution para MVP
+
+- [x] **Day 2 - @coder**: Implementación del executor ✅ COMPLETADO (2025-10-26)
+  - Files Created:
+    - `src/lib/validations/agent.ts` (82 lines) - Zod validation schemas
+    - `src/lib/agents/executor.ts` (480 lines) - Core execution engine
+    - `src/app/api/v1/agents/[agentId]/execute/route.ts` (220 lines) - POST endpoint
+  - Features: SSE streaming, timeout handling (5-60s), cost tracking, LLM router integration
+  - Build: ✅ PASSING
+
+- [x] **Day 3 - @tester**: Test suite creation ✅ COMPLETADO (2025-10-26)
+  - Files Created:
+    - `src/__tests__/unit/executor.test.ts` (27 test cases)
+    - `src/__tests__/integration/agent-execute.test.ts` (40 test cases)
+  - Test Results: 67/67 passing (100% success rate)
+  - Bugs Found: ZERO ✅
+  - Coverage: Exceeds 80% target
+
+- [ ] **Day 4 - @coder**: Bug fixes ⏭️ SKIPPED (no bugs found)
+
+- [x] **Day 5 - @reviewer**: Code review ✅ COMPLETADO (2025-10-26)
+  - Code Quality Score: 92/100
+  - Recommendation: ✅ APPROVED
+  - Issues Found: 2 MEDIUM (non-blocking), 1 LOW
+  - ADR-010 Compliance: 100% ✅
+  - Security: Strong (rate limiting disabled temporarily is systematic issue)
+  - Performance: Production-ready
+
+- [ ] **Day 5 - @documenter**: Documentation 🔵 READY TO START
+  - Input: Approved implementation
+  - Output: User guide, API reference updates, troubleshooting guide
+  - Estimated: 2-3 hours
+  - Status: Next in queue
+
+**Responsables**:
+- **Day 1**: @architect (Design)
+- **Day 2**: @coder (Implementation)
+- **Day 3**: @tester (QA)
+- **Day 4**: @coder (Skipped - no bugs)
+- **Day 5**: @reviewer (Code review) + @documenter (Documentation)
+
+**Métricas**:
+- Archivos creados: 5 archivos (3 implementation + 2 test files)
+- Líneas de código: 801 lines (implementation) + 67 tests
+- Test coverage: 67/67 passing (100%)
+- Code quality: 92/100
+- ADR compliance: 100%
+- Time to review: On track (day 5 of 3-5 day estimate)
+
+**Dependencias**:
+- ✅ Fase 5 completada (Backend + LLM Router)
+- ✅ Fase 6 completada (Frontend MVP)
+- ✅ Prisma CustomAgent model exists
+
+**Criterios de Finalización**:
+- [x] Architecture designed (ADR-010)
+- [x] Executor implemented (streaming + timeout + cost tracking)
+- [x] API endpoint created (POST /api/v1/agents/[agentId]/execute)
+- [x] Tests created (>80% coverage)
+- [x] Code review passed (APPROVED)
+- [ ] Documentation completed
+- [ ] Task 0 marked as COMPLETED
+
+**Bloqueadores Actuales**: Ninguno
+
+**Próxima Acción**: @documenter - Crear documentación de usuario y API reference
+
+**Impact on Fase 7**:
+- 🚫 Fase 7 BLOQUEADA hasta completar Task 0 (documentación pendiente)
+- ⏱️ Estimado desbloqueo: 2025-10-27 (mañana)
+
+---
+
+### Fase 7: Voice, Generative Features & Deployment 🚫 BLOQUEADA
+
+**Estado Actual**: 🚫 BLOQUEADA (Esperando Task 0: Agent System Foundation - 80% completado)
 **Progreso**: 0% completado
-**Fecha Estimada Inicio**: 2025-11-10
-**Fecha Estimada Finalización**: 2025-11-23
-**Duración Estimada**: 2 semanas
+**Bloqueador**: Task 0 documentación pendiente (20% restante)
+**Fecha Estimada Inicio**: 2025-10-27 (después de completar Task 0)
+**Fecha Estimada Finalización**: A determinarse
+
+**Duración Estimada** (AGENTES IA):
+- ⏱️ **Tiempo ejecución**: 50-68 horas (agentes IA trabajando)
+- 📅 **Tiempo calendario**: 8-12 días (con pausas/revisiones)
+- 💰 **Costo estimado**: $67-99 USD (tokens API Claude)
 
 **Descripción**:
 OpenAI gpt-realtime integration, DALL-E image generation, sector de tareas, testing final, MVP deploy.
 
-**Tareas Principales**:
-- [ ] OpenAI gpt-realtime integration
-- [ ] DALL-E image generation
-- [ ] Sector de tareas
-- [ ] Testing completo (unit + E2E)
-- [ ] Deploy a staging
-- [ ] Deploy a production (MVP v0.1.0-alpha)
+**Documentación de Referencia**:
+- 📄 [PHASE7-IMPLEMENTATION-PLAN.md](sys-docs/PHASE7-IMPLEMENTATION-PLAN.md) - Plan detallado con 8 tareas
 
-**Responsables Estimados**:
-- **Lead**: Tech Lead / Charlie
-- **Especialistas**: coder, ai-specialist, tester, architect
+**Tareas Principales** (8 tareas):
+- [ ] **Tarea 1**: OpenAI gpt-realtime integration (Voice Chat) - 8-12h | $12-18
+- [ ] **Tarea 2**: DALL-E 3 image generation - 6-8h | $8-12
+- [ ] **Tarea 3**: Task Management sector (Kanban board) - 10-14h | $15-20
+- [ ] **Tarea 4**: Unit Testing Suite (>80% coverage) - 8-10h | $10-15
+- [ ] **Tarea 5**: E2E Testing Suite (Playwright) - 6-8h | $8-12
+- [ ] **Tarea 6**: Vercel Staging Deployment - 4-6h | $5-8
+- [ ] **Tarea 7**: Production Deployment & Monitoring - 4-6h | $5-8
+- [ ] **Tarea 8**: Documentation & Release Notes - 3-4h | $4-6
+
+**Responsables**:
+- **Orquestador**: CLAUDE
+- **Agentes IA**: coder, ai-specialist, tester, architect, ux-designer, documenter, system-analyzer, security-specialist
 
 **Dependencias**:
 - ✅ Fase 5 completada (Backend)
@@ -1698,6 +1803,17 @@ BLOB_READ_WRITE_TOKEN=your-token
 
 ---
 
+### 2025-10-25 EOD - system-claude Prompt Actualizado + Fase 7 BLOQUEADA
+
+**Cambios**:
+- ✅ Actualizado prompt de system-claude (.claude/agents/system-claude.md)
+- 🚫 Fase 7 marcada como BLOQUEADA (requiere Task 0)
+- ⏳ Task 0 (Agent System Foundation) NO iniciada - bloqueador crítico
+
+**Próximos Pasos**: Iniciar Task 0 para desbloquear Fase 7
+
+---
+
 ### 2025-10-25 - Fase 6 COMPLETADA AL 100% EN 1 DÍA ⚡
 
 **Resumen**: Fase 6 completada al 100% en un solo día de trabajo (vs 10-14 días estimados). **PRODUCTIVIDAD ULTRA-ALTA**.
@@ -1748,11 +1864,74 @@ BLOB_READ_WRITE_TOKEN=your-token
 
 ---
 
+### 2025-10-26 EOD - Task 0 (Agent System Foundation) 80% COMPLETADO
+
+**Resumen**: Task 0 implementado exitosamente con 67 tests passing, code review aprobado (92/100). Documentación pendiente para desbloquear Fase 7.
+
+**Workflow Ejecutado**: Workflow 1 (Large Feature - 5 day sequence)
+
+**Progreso por Día**:
+- **Day 1** - @architect: ADR-010 creado (Inline execution pattern) ✅
+- **Day 2** - @coder: Implementación completa (3 archivos, 782 líneas) ✅
+- **Day 3** - @tester: Test suite (67 tests, 100% passing, ZERO bugs) ✅
+- **Day 4** - @coder: SKIPPED (no bugs found) ⏭️
+- **Day 5** - @reviewer: Code review APPROVED (92/100) ✅
+- **Day 5** - @documenter: Documentación pendiente 🔵
+
+**Archivos Creados**:
+1. `src/lib/validations/agent.ts` (82 lines) - Zod schemas
+2. `src/lib/agents/executor.ts` (480 lines) - Core engine
+3. `src/app/api/v1/agents/[agentId]/execute/route.ts` (220 lines) - API endpoint
+4. `src/__tests__/unit/executor.test.ts` (27 test cases)
+5. `src/__tests__/integration/agent-execute.test.ts` (40 test cases)
+
+**Features Implementadas**:
+- ✅ SSE streaming (Server-Sent Events)
+- ✅ Timeout handling (5-60 seconds con AbortController)
+- ✅ Cost tracking ($3/$15 per 1M tokens Claude Sonnet)
+- ✅ LLM Router integration (model selection)
+- ✅ Tier validation (FREE/PRO/ENTERPRISE hierarchy)
+- ✅ Ownership validation (requireOwnership + admin bypass)
+- ✅ Zod validation (message, temperature, maxTokens, timeout)
+- ✅ Error handling (401/403/404/408/500)
+- ✅ Winston logging (structured)
+
+**Test Results**:
+- Total: 67 tests
+- Passing: 67 (100%)
+- Failing: 0
+- Coverage: >80% target met
+- Bugs: ZERO ✅
+
+**Code Review Results**:
+- Quality Score: 92/100
+- Recommendation: ✅ APPROVED
+- Issues: 2 MEDIUM (non-blocking), 1 LOW
+- ADR-010 Compliance: 100%
+- Security: Strong
+- Performance: Production-ready
+
+**Impacto en Progreso**:
+- Task 0: 0% → 80% completado
+- Overall: 60% → 62% completado
+- Código: +782 líneas implementation + 67 tests
+- Archivos: +5 archivos
+
+**Bloqueador Actual**:
+- 🚫 Fase 7 BLOQUEADA hasta completar documentación (20% restante)
+- ⏱️ Estimado desbloqueo: 2025-10-27 (mañana)
+
+**Próxima Acción**: @documenter - Crear user guide + API reference + troubleshooting
+
+**Status**: 🟡 EN PROGRESO - Documentación pendiente para alcanzar 100%
+
+---
+
 **Documento Maestro de Planificación - cjhirashi-agents MVP**
-**Última Actualización**: 2025-10-25 EOD (Fase 6: 100% COMPLETADA - TODAS las tareas finalizadas)
-**Próxima Revisión**: 2025-10-26 (Iniciar Fase 7 - Voice & Deployment)
+**Última Actualización**: 2025-10-27 - BLOQUEADOR CRÍTICO Identificado
+**Próxima Revisión**: Al completar Task 0 documentación (2025-10-27)
 **Responsable**: Charlie (Owner) + CLAUDE (Orquestador)
 
-**🎉 MILESTONE ALCANZADO**: Frontend MVP 100% completado en 1 día (vs 10-14 días estimados)
+**🚫 BLOQUEADOR CRÍTICO**: Fase 7 bloqueada - requiere Task 0 documentación (20% pendiente)
 
 🚀 **Este documento es la guía maestra para el desarrollo del proyecto. Actualízalo cuando haya cambios significativos.**

@@ -30,7 +30,7 @@ export async function GET(
       sessionId
     });
 
-    // 2. Fetch session with conversations and messages
+    // 2. Fetch session with messages through conversations
     const session = await prisma.chatSession.findFirst({
       where: {
         id: sessionId
@@ -53,27 +53,23 @@ export async function GET(
     // 3. Check ownership (throws 403 if not owner or admin)
     await requireOwnership(session.userId);
 
+    // Flatten messages from all conversations
+    const allMessagesRaw = session.conversations.flatMap(conv => conv.messages);
+
     // Calculate totals
-    let totalMessages = 0;
-    let totalTokens = 0;
+    const totalMessages = allMessagesRaw.length;
+    const totalTokens = allMessagesRaw.reduce((sum, msg) => {
+      return sum + (msg.tokensInput || 0) + (msg.tokensOutput || 0);
+    }, 0);
 
-    const allMessages = session.conversations.flatMap((conv: { messages: Array<{ id: string; role: string; content: string; timestamp: Date; tokensInput?: number; tokensOutput?: number; metadata?: unknown }> }) => {
-      totalMessages += conv.messages.length;
-      conv.messages.forEach((msg: { tokensInput?: number; tokensOutput?: number }) => {
-        totalTokens += (msg.tokensInput || 0) + (msg.tokensOutput || 0);
-      });
-
-      return conv.messages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp.toISOString(),
-        tokensUsed: (msg.tokensInput || 0) + (msg.tokensOutput || 0),
-        metadata: msg.metadata
-      }));
-    });
-
-    const metadata = session.metadata as Record<string, unknown> | null;
+    const allMessages = allMessagesRaw.map((msg) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp.toISOString(),
+      tokensUsed: (msg.tokensInput || 0) + (msg.tokensOutput || 0),
+      metadata: msg.metadata
+    }));
 
     logger.info('Session fetched successfully', {
       sessionId,
@@ -84,10 +80,10 @@ export async function GET(
     return NextResponse.json({
       data: {
         id: session.id,
-        title: metadata?.title || 'Untitled Chat',
         userId: session.userId,
         startedAt: session.startedAt.toISOString(),
         lastActivity: session.lastActivity.toISOString(),
+        metadata: session.metadata,
         messages: allMessages,
         messageCount: totalMessages,
         totalTokens

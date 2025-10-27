@@ -32,7 +32,9 @@ if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma;
 }
 
+// Export as both default and named for compatibility
 export default prisma;
+export { prisma };
 
 /**
  * Helper to gracefully disconnect Prisma client
