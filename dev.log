@@ -1,0 +1,31 @@
+
+> temp-next@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.5
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.11:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 8s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 4.2s (290 modules)
+ ○ Compiling /dashboard/admin ...
+ ✓ Compiled /dashboard/admin in 39.6s (2451 modules)
+ GET /dashboard/admin 200 in 44906ms
+ ✓ Compiled in 3.9s (1124 modules)
+ ✓ Compiled in 2s (1124 modules)
+ ✓ Compiled in 1181ms (1124 modules)
+ ✓ Compiled in 845ms (1124 modules)
+ ✓ Compiled in 1090ms (1124 modules)
+ ✓ Compiled in 873ms (1124 modules)
+ ✓ Compiled in 997ms (1124 modules)
+ ✓ Compiled in 721ms (1124 modules)
+ ✓ Compiled in 746ms (1124 modules)
+ ✓ Compiled in 657ms (1124 modules)
+ ✓ Compiled in 964ms (1124 modules)
+ ✓ Compiled in 954ms (1124 modules)
+ ✓ Compiled in 683ms (1124 modules)
+ ✓ Compiled in 655ms (1124 modules)
+ ✓ Compiled in 4.7s (1124 modules)

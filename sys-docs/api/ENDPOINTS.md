@@ -985,6 +985,282 @@ GET /api/v1/agents?category=coding&search=python&limit=20
 
 ---
 
+### POST /api/v1/agents/{agentId}/execute
+
+**Descripción:** Ejecutar un Custom Agent con SSE streaming (Task 0 - Agent System Foundation)
+
+**Autenticación:** Bearer token requerido
+
+**RBAC:** requireAuth + requireOwnership (solo el creador puede ejecutar, excepto ADMIN/SUPER_ADMIN)
+
+**Rate Limiting:**
+- FREE: 10 requests/min
+- PRO: 50 requests/min
+- ENTERPRISE: 500 requests/min
+
+**Parámetros de Path:**
+- `agentId`: UUID del Custom Agent
+
+**Solicitud:**
+```json
+{
+  "message": "Revisa este código React para problemas de performance",
+  "temperature": 0.7,
+  "maxTokens": 4096,
+  "timeout": 30,
+  "stream": true
+}
+```
+
+**Campos de Solicitud:**
+
+| Campo | Tipo | Requerido | Rango/Validación | Default | Descripción |
+|-------|------|-----------|------------------|---------|-------------|
+| `message` | string | ✅ | 1-10000 chars | - | Mensaje del usuario al agente |
+| `temperature` | number | ❌ | 0-2 | 0.7 | Creatividad (0=determinístico, 2=muy creativo) |
+| `maxTokens` | number | ❌ | 1-8192 | 4096 | Máximo de tokens a generar |
+| `timeout` | number | ❌ | 5-60 | 30 | Timeout en segundos (MVP limit: 60s) |
+| `stream` | boolean | ❌ | true/false | true | Habilitar SSE streaming |
+
+**Respuesta:** Server-Sent Events (SSE) stream
+
+**Content-Type:** `text/event-stream`
+
+**Headers Adicionales:**
+```http
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+**Eventos SSE:**
+
+#### 1. Event: `start`
+```json
+{
+  "executionId": "exec-clx123abc",
+  "agentId": "agent-clx456def",
+  "agentName": "Code Review Assistant",
+  "modelId": "claude-3-5-sonnet-20241022",
+  "timestamp": "2025-10-26T12:34:56.789Z"
+}
+```
+
+#### 2. Event: `chunk` (múltiples)
+```json
+{
+  "content": "Este componente React tiene varios problemas de performance:\n\n1. Re-renders innecesarios...",
+  "delta": "1. Re-renders innecesarios..."
+}
+```
+
+#### 3. Event: `done`
+```json
+{
+  "executionId": "exec-clx123abc",
+  "tokensUsed": 1500,
+  "promptTokens": 1000,
+  "completionTokens": 500,
+  "cost": 0.0105,
+  "duration": 3200,
+  "completedAt": "2025-10-26T12:34:59.989Z"
+}
+```
+
+#### 4. Event: `error` (si ocurre error)
+```json
+{
+  "error": "Agent execution timed out after 30 seconds",
+  "code": "EXECUTION_TIMEOUT",
+  "executionId": "exec-clx123abc"
+}
+```
+
+**Ejemplo de consumo (JavaScript):**
+```javascript
+const response = await fetch(`/api/v1/agents/${agentId}/execute`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_TOKEN'
+  },
+  body: JSON.stringify({
+    message: 'Hello, agent!',
+    temperature: 0.7,
+    maxTokens: 2048,
+    timeout: 30
+  })
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const chunk = decoder.decode(value, { stream: true });
+  const lines = chunk.split('\n');
+
+  for (const line of lines) {
+    if (line.startsWith('event: ')) {
+      const eventType = line.slice(7).trim();
+    } else if (line.startsWith('data: ')) {
+      const data = JSON.parse(line.slice(6));
+
+      if (eventType === 'chunk') {
+        console.log('Delta:', data.delta);
+      } else if (eventType === 'done') {
+        console.log('Cost:', data.cost, 'USD');
+        console.log('Duration:', data.duration, 'ms');
+      }
+    }
+  }
+}
+```
+
+**Errores Posibles:**
+
+**400 - Validation Error:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request data",
+    "statusCode": 400,
+    "timestamp": "2025-10-26T12:34:56.789Z",
+    "details": [
+      {
+        "code": "too_small",
+        "minimum": 1,
+        "path": ["message"],
+        "message": "Message cannot be empty"
+      }
+    ]
+  }
+}
+```
+
+**401 - Unauthorized:**
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication required",
+    "statusCode": 401,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**403 - Forbidden (No Owner):**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You do not have permission to execute this agent",
+    "statusCode": 403,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**403 - Insufficient Tier:**
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_TIER",
+    "message": "Agent requires PRO tier or higher",
+    "statusCode": 403,
+    "timestamp": "2025-10-26T12:34:56.789Z",
+    "details": {
+      "requiredTier": "PRO",
+      "userTier": "FREE"
+    }
+  }
+}
+```
+
+**404 - Agent Not Found:**
+```json
+{
+  "error": {
+    "code": "AGENT_NOT_FOUND",
+    "message": "Agent not found",
+    "statusCode": 404,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**408 - Execution Timeout:**
+```json
+{
+  "error": {
+    "code": "EXECUTION_TIMEOUT",
+    "message": "Agent execution timed out after 30 seconds",
+    "statusCode": 408,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**429 - Rate Limit Exceeded:**
+```json
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Rate limit exceeded. Try again in 45 seconds.",
+    "statusCode": 429,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**500 - Execution Error:**
+```json
+{
+  "error": {
+    "code": "EXECUTION_ERROR",
+    "message": "Agent execution failed",
+    "statusCode": 500,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**500 - Service Configuration Error:**
+```json
+{
+  "error": {
+    "code": "SERVICE_CONFIG_ERROR",
+    "message": "AI service configuration error",
+    "statusCode": 500,
+    "timestamp": "2025-10-26T12:34:56.789Z"
+  }
+}
+```
+
+**Notas Técnicas:**
+
+1. **Timeout Handling**: Implementado con AbortController, cancela la request LLM inmediatamente
+2. **Cost Tracking**: Calculado en tiempo real basado en tokens (Claude 3.5 Sonnet: $3/1M input, $15/1M output)
+3. **LLM Router Integration**: Selecciona modelo automáticamente si `agent.modelId` no especificado
+4. **Tier Validation**: Valida jerarquía FREE < BASIC < PRO < ENTERPRISE < CUSTOM < UNLIMITED
+5. **Ownership**: Solo el creador puede ejecutar, excepto roles ADMIN/SUPER_ADMIN que tienen bypass
+6. **Rate Limiting**: Endpoint `agents:execute` con límites por tier
+
+**Referencias:**
+- User Guide: [sys-docs/guides/CUSTOM-AGENTS.md](../guides/CUSTOM-AGENTS.md)
+- Architecture: [ADR-010: Custom Agent Execution](../architecture/ADR-010-custom-agent-execution.md)
+- Implementation: `src/app/api/v1/agents/[agentId]/execute/route.ts`
+- Executor: `src/lib/agents/executor.ts`
+- Validation: `src/lib/validations/agent.ts`
+- Tests: `src/__tests__/unit/executor.test.ts`, `src/__tests__/integration/agent-execute.test.ts`
+
+**Implementado:** 2025-10-26 (Task 0 - Agent System Foundation)
+
+---
+
 ## Categoría: Documentos RAG
 
 ### POST /api/v1/rag/documents
@@ -2784,12 +3060,12 @@ Link: <https://docs.example.com/migration/v2>; rel="sunset"
 **Propietario:** Backend Coder
 **Próxima Revisión:** Fase 5 (Implementación de Backend)
 
-**Total de Endpoints Documentados:** 58
+**Total de Endpoints Documentados:** 59
 
 **Conteo de Endpoints por Categoría:**
 - Autenticación: 6
 - Chat: 6
-- Agentes: 5
+- Agentes: 6 (+ POST /api/v1/agents/{agentId}/execute - Task 0)
 - Documentos RAG: 4
 - Artefactos: 4
 - Usuarios y Configuración: 5

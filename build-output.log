@@ -1,0 +1,143 @@
+
+> temp-next@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.5
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 19.2s
+   Linting and checking validity of types ...
+
+./src/app/api/admin/invitations/route.ts
+4:10  Warning: 'auth' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/v1/chat/send/route.ts
+11:10  Warning: 'NextRequest' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Warning: 'withRateLimit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/v1/chat/sessions/route.ts
+15:10  Warning: 'withRateLimit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/v1/documents/route.ts
+9:10  Warning: 'NextRequest' is defined but never used.  @typescript-eslint/no-unused-vars
+11:10  Warning: 'withRateLimit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/v1/documents/upload/route.ts
+11:10  Warning: 'NextRequest' is defined but never used.  @typescript-eslint/no-unused-vars
+13:10  Warning: 'withRateLimit' is defined but never used.  @typescript-eslint/no-unused-vars
+25:15  Warning: 'SubscriptionTier' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/v1/user/rate-limits/route.ts
+28:27  Warning: 'request' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/admin/page.backup.tsx
+112:6  Warning: React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/dashboard/admin/page.tsx
+82:5  Warning: 'refreshUsers' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+115:6  Warning: React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/dashboard/documents/documents-client.tsx
+10:29  Warning: 'Document' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard/support/page.tsx
+79:6  Warning: React Hook useEffect has a missing dependency: 'loadTickets'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/dashboard/support/[ticketId]/page.tsx
+92:6  Warning: React Hook useEffect has a missing dependency: 'loadTicket'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/UserMetricsDialog.tsx
+87:6  Warning: React Hook useEffect has a missing dependency: 'loadMetrics'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/UserTable.tsx
+70:3  Warning: 'limit' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/documents/DocumentUpload.tsx
+129:5  Warning: React Hook useCallback has missing dependencies: 'uploadFile' and 'validateFile'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/storage/FileList.tsx
+86:6  Warning: React Hook useEffect has a missing dependency: 'loadFiles'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/storage/FileUploader.tsx
+64:5  Warning: React Hook useCallback has a missing dependency: 'uploadFile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/lib/agents/executor.ts
+26:15  Warning: 'AgentExecuteRequest' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/ai/router.ts
+18:18  Warning: 'isValidModel' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/ai/vercel-ai.ts
+11:24  Warning: 'streamText' is defined but never used.  @typescript-eslint/no-unused-vars
+258:3  Warning: 'routing' is defined but never used.  @typescript-eslint/no-unused-vars
+259:3  Warning: 'request' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/prisma.ts
+15:3  Warning: Unused eslint-disable directive (no problems were reported from 'no-var').
+
+./src/lib/rag/context.ts
+15:15  Warning: 'SearchOptions' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/rag/pipeline.ts
+18:22  Warning: 'LangChainDocument' is defined but never used.  @typescript-eslint/no-unused-vars
+23:25  Warning: 'DocumentStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+309:40  Warning: 'blobUrl' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/rag/search.ts
+145:52  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/rate-limit/middleware.ts
+217:16  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/storage/adapters/local-adapter.ts
+40:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+272:16  Warning: 'storagePath' is defined but never used.  @typescript-eslint/no-unused-vars
+283:22  Warning: 'storagePath' is defined but never used.  @typescript-eslint/no-unused-vars
+283:43  Warning: 'expiresIn' is defined but never used.  @typescript-eslint/no-unused-vars
+319:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+335:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+368:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/storage/adapters/vercel-blob-adapter.ts
+250:43  Warning: 'expiresIn' is defined but never used.  @typescript-eslint/no-unused-vars
+294:19  Warning: 'prefix' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/storage/storage-service.ts
+10:3  Warning: 'FileAccessLevel' is defined but never used.  @typescript-eslint/no-unused-vars
+13:3  Warning: 'ShareType' is defined but never used.  @typescript-eslint/no-unused-vars
+31:3  Warning: 'QuotaExceededError' is defined but never used.  @typescript-eslint/no-unused-vars
+32:3  Warning: 'StorageError' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/storage/types.ts
+9:3  Warning: 'FileAction' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/storage/utils/encryption.ts
+15:7  Warning: 'AUTH_TAG_LENGTH' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+85:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+144:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+187:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+220:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+249:12  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/types/next-auth.d.ts
+1:8  Warning: 'NextAuth' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/__tests__/unit/rag.test.ts
+13:32  Warning: 'vi' is defined but never used.  @typescript-eslint/no-unused-vars
+13:36  Warning: 'beforeEach' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Failed to compile.
+
+./auth.config.ts:41:40
+Type error: This comparison appears to be unintentional because the types '"CLIENT" | "GUEST" | "SUPERUSER" | undefined' and '"SUPER_ADMIN"' have no overlap.
+
+[0m [90m 39 |[39m       [36mif[39m (pathname[33m.[39mstartsWith([32m'/dashboard/admin'[39m)) {
+ [90m 40 |[39m         [36mconst[39m userRole [33m=[39m auth[33m?[39m[33m.[39muser[33m?[39m[33m.[39mrole[33m;[39m
+[31m[1m>[22m[39m[90m 41 |[39m         [36mreturn[39m userRole [33m===[39m [32m'ADMIN'[39m [33m||[39m userRole [33m===[39m [32m'SUPER_ADMIN'[39m[33m;[39m
+ [90m    |[39m                                        [31m[1m^[22m[39m
+ [90m 42 |[39m       }
+ [90m 43 |[39m
+ [90m 44 |[39m       [36mreturn[39m [36mtrue[39m[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null
