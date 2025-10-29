@@ -18,8 +18,11 @@ import authConfig from '../../auth.config';
 // Type extensions are in src/types/next-auth.d.ts
 // ═══════════════════════════════════════════════════════════
 
+// Type assertion to resolve @auth/core version conflict between NextAuth v5 and node_modules
+// This is a known issue with Next.js 15 + NextAuth v5 dependency duplication
+// Runtime functionality is not affected, only TypeScript types
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as ReturnType<typeof PrismaAdapter>, // Type assertion to resolve @auth/core version conflict
+  adapter: PrismaAdapter(prisma) as any, // @auth/core version conflict workaround
 
   // Use JWT strategy for stateless sessions
   session: {

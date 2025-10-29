@@ -299,7 +299,7 @@ export class AudioPlayback {
       );
 
       // Copy data to buffer
-      audioBuffer.copyToChannel(float32 as Float32Array, 0);
+      audioBuffer.copyToChannel(float32 as Float32Array<ArrayBuffer>, 0);
 
       // Queue or play immediately
       if (this.isPlaying) {

@@ -85,8 +85,8 @@ export class WebRTCClient {
   static isSupported(): boolean {
     return !!(
       navigator.mediaDevices &&
-      navigator.mediaDevices.getUserMedia &&
-      navigator.mediaDevices.enumerateDevices
+      typeof navigator.mediaDevices.getUserMedia === 'function' &&
+      typeof navigator.mediaDevices.enumerateDevices === 'function'
     );
   }
 
