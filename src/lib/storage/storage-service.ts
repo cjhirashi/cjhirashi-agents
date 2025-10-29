@@ -132,7 +132,7 @@ export class StorageService {
     });
 
     // 8. Crear registro en base de datos
-    const fileRecord = await prisma.storageFile.create({
+    const fileRecord = await prisma.storage_files.create({
       data: {
         filename: uniqueFilename,
         originalName: sanitizeFilename(filename),
@@ -195,7 +195,7 @@ export class StorageService {
     options?: { skipAccessCheck?: boolean }
   ): Promise<DownloadResult> {
     // 1. Obtener registro del archivo
-    const fileRecord = await prisma.storageFile.findUnique({
+    const fileRecord = await prisma.storage_files.findUnique({
       where: { id: fileId },
     });
 
@@ -265,7 +265,7 @@ export class StorageService {
    */
   async delete(fileId: string, userId: string): Promise<void> {
     // 1. Obtener registro del archivo
-    const fileRecord = await prisma.storageFile.findUnique({
+    const fileRecord = await prisma.storage_files.findUnique({
       where: { id: fileId },
     });
 
@@ -277,7 +277,7 @@ export class StorageService {
     await this.checkFileAccess(fileRecord, userId, 'delete');
 
     // 3. Soft delete en base de datos
-    await prisma.storageFile.update({
+    await prisma.storage_files.update({
       where: { id: fileId },
       data: { deletedAt: new Date() },
     });
@@ -358,13 +358,13 @@ export class StorageService {
 
     // Obtener archivos
     const [files, total] = await Promise.all([
-      prisma.storageFile.findMany({
+      prisma.storage_files.findMany({
         where,
         take: limit,
         skip: offset,
         orderBy: { [sortBy]: sortOrder },
       }),
-      prisma.storageFile.count({ where }),
+      prisma.storage_files.count({ where }),
     ]);
 
     return {
@@ -378,7 +378,7 @@ export class StorageService {
    * Obtiene información de un archivo
    */
   async getFileInfo(fileId: string, userId: string): Promise<FileMetadata> {
-    const fileRecord = await prisma.storageFile.findUnique({
+    const fileRecord = await prisma.storage_files.findUnique({
       where: { id: fileId },
     });
 
@@ -411,7 +411,7 @@ export class StorageService {
     } = options;
 
     // 1. Verificar que el archivo existe y el usuario es el propietario
-    const fileRecord = await prisma.storageFile.findUnique({
+    const fileRecord = await prisma.storage_files.findUnique({
       where: { id: fileId },
     });
 
@@ -430,7 +430,7 @@ export class StorageService {
     const hashedPassword = password ? hashPassword(password) : null;
 
     // 4. Crear registro de compartición
-    const share = await prisma.fileShare.create({
+    const share = await prisma.file_shares.create({
       data: {
         fileId,
         sharedBy: userId,
@@ -480,7 +480,7 @@ export class StorageService {
     password?: string
   ): Promise<{ file: FileMetadata; canDownload: boolean; canView: boolean }> {
     // 1. Buscar share
-    const share = await prisma.fileShare.findUnique({
+    const share = await prisma.file_shares.findUnique({
       where: { shareToken },
       include: { file: true },
     });
@@ -516,7 +516,7 @@ export class StorageService {
     }
 
     // 3. Actualizar último acceso
-    await prisma.fileShare.update({
+    await prisma.file_shares.update({
       where: { id: share.id },
       data: { lastAccessed: new Date() },
     });
@@ -536,13 +536,13 @@ export class StorageService {
    * Obtiene o crea la cuota de un usuario
    */
   async getOrCreateQuota(userId: string): Promise<QuotaInfo> {
-    let quota = await prisma.storageQuota.findUnique({
+    let quota = await prisma.storage_quotas.findUnique({
       where: { userId },
     });
 
     if (!quota) {
       // Obtener tier del usuario
-      const user = await prisma.user.findUnique({
+      const user = await prisma.users.findUnique({
         where: { id: userId },
         select: { subscriptionTier: true },
       });
@@ -550,7 +550,7 @@ export class StorageService {
       const tier = user?.subscriptionTier || 'FREE';
       const limits = getQuotaLimits(tier);
 
-      quota = await prisma.storageQuota.create({
+      quota = await prisma.storage_quotas.create({
         data: {
           userId,
           maxStorage: limits.maxStorage,
@@ -572,7 +572,7 @@ export class StorageService {
     fileSize: number,
     usageContext: FileUsageContext
   ): Promise<void> {
-    const quota = await prisma.storageQuota.findUnique({
+    const quota = await prisma.storage_quotas.findUnique({
       where: { userId },
     });
 
@@ -581,7 +581,7 @@ export class StorageService {
     const usageBreakdown = (quota.usageBreakdown as Record<string, number>) || {};
     usageBreakdown[usageContext] = (usageBreakdown[usageContext] || 0) + fileSize;
 
-    await prisma.storageQuota.update({
+    await prisma.storage_quotas.update({
       where: { userId },
       data: {
         usedStorage: { increment: BigInt(fileSize) },
@@ -600,7 +600,7 @@ export class StorageService {
     fileSize: number,
     usageContext: FileUsageContext
   ): Promise<void> {
-    const quota = await prisma.storageQuota.findUnique({
+    const quota = await prisma.storage_quotas.findUnique({
       where: { userId },
     });
 
@@ -609,7 +609,7 @@ export class StorageService {
     const usageBreakdown = (quota.usageBreakdown as Record<string, number>) || {};
     usageBreakdown[usageContext] = Math.max(0, (usageBreakdown[usageContext] || 0) - fileSize);
 
-    await prisma.storageQuota.update({
+    await prisma.storage_quotas.update({
       where: { userId },
       data: {
         usedStorage: { decrement: BigInt(fileSize) },
@@ -678,7 +678,7 @@ export class StorageService {
     action: FileAction
   ): Promise<void> {
     try {
-      await prisma.fileAccessLog.create({
+      await prisma.file_access_logs.create({
         data: {
           fileId,
           userId,
@@ -754,14 +754,14 @@ export class StorageService {
       filename: record.filename,
       originalName: record.originalName,
       storagePath: record.storagePath,
-      storageProvider: record.storageProvider,
+      storageProvider: record.storageProvider as StorageProvider,
       mimeType: record.mimeType,
       size: record.size,
       checksum: record.checksum,
       userId: record.userId,
       folderId: record.folderId,
-      accessLevel: record.accessLevel,
-      usageContext: record.usageContext,
+      accessLevel: record.accessLevel as FileAccessLevel,
+      usageContext: record.usageContext as FileUsageContext,
       encrypted: record.encrypted,
       encryptionKeyId: record.encryptionKeyId,
       isProcessed: record.isProcessed,

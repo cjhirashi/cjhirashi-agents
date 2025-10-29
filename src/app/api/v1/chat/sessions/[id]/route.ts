@@ -31,7 +31,7 @@ export async function GET(
     });
 
     // 2. Fetch session with messages through conversations
-    const session = await prisma.chatSession.findFirst({
+    const session = await prisma.chat_sessions.findFirst({
       where: {
         id: sessionId
       },
@@ -149,7 +149,7 @@ export async function DELETE(
     });
 
     // 2. Verify session exists
-    const session = await prisma.chatSession.findFirst({
+    const session = await prisma.chat_sessions.findFirst({
       where: {
         id: sessionId
       }
@@ -165,7 +165,7 @@ export async function DELETE(
     // Soft delete session (using updated_at as pseudo-deleted_at)
     // Note: Schema doesn't have deletedAt field on ChatSession
     // We'll delete it for real (can be changed to soft delete if schema is updated)
-    await prisma.chatSession.delete({
+    await prisma.chat_sessions.delete({
       where: { id: sessionId }
     });
 

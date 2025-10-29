@@ -43,7 +43,7 @@ export async function GET(
     });
 
     // 3. Verify session exists and ownership
-    const session = await prisma.chatSession.findFirst({
+    const session = await prisma.chat_sessions.findFirst({
       where: {
         id: sessionId
       }

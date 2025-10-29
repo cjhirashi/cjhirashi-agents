@@ -47,7 +47,7 @@ export async function GET(
     logger.info('[Task API] Fetching task', { taskId, userId });
 
     // 2. Fetch task
-    const task = await prisma.task.findUnique({
+    const task = await prisma.tasks.findUnique({
       where: { id: taskId },
     });
 
@@ -151,7 +151,7 @@ export async function PATCH(
     const updates = validationResult.data;
 
     // 3. Fetch task
-    const task = await prisma.task.findUnique({
+    const task = await prisma.tasks.findUnique({
       where: { id: taskId },
     });
 
@@ -184,7 +184,7 @@ export async function PATCH(
     }
 
     // 5. Update task
-    const updatedTask = await prisma.task.update({
+    const updatedTask = await prisma.tasks.update({
       where: { id: taskId },
       data: {
         ...updates,
@@ -251,7 +251,7 @@ export async function DELETE(
     logger.info('[Task API] Deleting task', { taskId, userId });
 
     // 2. Fetch task
-    const task = await prisma.task.findUnique({
+    const task = await prisma.tasks.findUnique({
       where: { id: taskId },
     });
 
@@ -284,7 +284,7 @@ export async function DELETE(
     }
 
     // 4. Delete task
-    await prisma.task.delete({
+    await prisma.tasks.delete({
       where: { id: taskId },
     });
 

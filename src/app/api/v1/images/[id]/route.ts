@@ -28,7 +28,7 @@ export async function DELETE(
     logger.info('[Image API] Deleting image', { imageId, userId });
 
     // 2. Fetch image
-    const image = await prisma.generatedImage.findUnique({
+    const image = await prisma.generated_images.findUnique({
       where: { id: imageId },
     });
 
@@ -61,7 +61,7 @@ export async function DELETE(
     }
 
     // 4. Delete image from database
-    await prisma.generatedImage.delete({
+    await prisma.generated_images.delete({
       where: { id: imageId },
     });
 

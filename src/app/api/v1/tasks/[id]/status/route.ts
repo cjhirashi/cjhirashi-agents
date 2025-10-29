@@ -63,7 +63,7 @@ export async function PATCH(
     const { status: newStatus, position: newPosition } = validationResult.data;
 
     // 3. Fetch task
-    const task = await prisma.task.findUnique({
+    const task = await prisma.tasks.findUnique({
       where: { id: taskId },
     });
 
@@ -100,7 +100,7 @@ export async function PATCH(
       // If moving to a different column, update positions in both columns
       if (task.status !== newStatus) {
         // Remove from old column (shift down tasks after this one)
-        await prisma.task.updateMany({
+        await prisma.tasks.updateMany({
           where: {
             userId,
             status: task.status,
@@ -112,7 +112,7 @@ export async function PATCH(
         });
 
         // Make space in new column (shift up tasks at and after new position)
-        await prisma.task.updateMany({
+        await prisma.tasks.updateMany({
           where: {
             userId,
             status: newStatus,
@@ -126,7 +126,7 @@ export async function PATCH(
         // Moving within same column
         if (newPosition < task.position) {
           // Moving up - shift down tasks between new and old position
-          await prisma.task.updateMany({
+          await prisma.tasks.updateMany({
             where: {
               userId,
               status: newStatus,
@@ -138,7 +138,7 @@ export async function PATCH(
           });
         } else if (newPosition > task.position) {
           // Moving down - shift up tasks between old and new position
-          await prisma.task.updateMany({
+          await prisma.tasks.updateMany({
             where: {
               userId,
               status: newStatus,
@@ -153,7 +153,7 @@ export async function PATCH(
     }
 
     // 6. Update the task itself
-    const updatedTask = await prisma.task.update({
+    const updatedTask = await prisma.tasks.update({
       where: { id: taskId },
       data: {
         status: newStatus,

@@ -7,66 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                                                  String                   @id @default(cuid())
-  email                                               String                   @unique
-  emailVerified                                       DateTime?
-  name                                                String?
-  role                                                UserRole                 @default(USER)
-  isActive                                            Boolean                  @default(true)
-  createdAt                                           DateTime                 @default(now())
-  updatedAt                                           DateTime                 @updatedAt
-  subscriptionTier                                    SubscriptionTier         @default(FREE)
-  aiProfileLastUpdate                                 DateTime?
-  avatar                                              String?
-  bio                                                 String?
-  customLimits                                        Json?
-  dateOfBirth                                         DateTime?
-  displayName                                         String?
-  language                                            String                   @default("es")
-  lastInteraction                                     DateTime?
-  lastResetAt                                         DateTime                 @default(now())
-  monthlyMessages                                     Int                      @default(0)
-  monthlyTokens                                       BigInt                   @default(0)
-  permissions                                         Json?
-  personalityProfile                                  Json?
-  subscriptionEnd                                     DateTime?
-  subscriptionId                                      String?
-  subscriptionStart                                   DateTime?
-  timezone                                            String                   @default("America/Mexico_City")
-  totalMessages                                       Int                      @default(0)
-  totalTokensUsed                                     BigInt                   @default(0)
-  accounts                                            Account[]
-  agents                                              agents[]
-  audit_logs                                          audit_logs[]
-  sessions                                            Session[]
-  chatSessions                                        ChatSession[]
-  financial_profiles                                  financial_profiles?
-  health_profiles                                     health_profiles?
-  invitations_invitations_emailTousers                Invitation[]             @relation("invitations_emailTousers")
-  invitations_invitations_invitedByTousers            Invitation[]             @relation("invitations_invitedByTousers")
-  monthly_usage                                       monthly_usage[]
-  support_tickets_support_tickets_assignedToIdTousers support_tickets[]        @relation("support_tickets_assignedToIdTousers")
-  support_tickets_support_tickets_userIdTousers       support_tickets[]        @relation("support_tickets_userIdTousers")
-  usage_alerts                                        usage_alerts[]
-  usage_logs                                          usage_logs[]
-  user_agent_permissions                              user_agent_permissions[]
-
-  @@map("users")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("auth_sessions")
-}
-
-model Account {
-  id                String  @id @default(cuid())
+model accounts {
+  id                String  @id
   userId            String
   type              String
   provider          String
@@ -78,74 +20,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  users             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users             users   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@map("accounts")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
-model Artifact {
-  id              String     @id @default(cuid())
-  agentId         String
-  userId          String
-  conversationId  String?
-  name            String
-  type            String
-  content         String
-  version         Int        @default(1)
-  parentId        String?
-  metadata        Json?
-  tags            Json?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  agents          agents     @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  artifacts       Artifact?  @relation("artifactsToartifacts", fields: [parentId], references: [id])
-  other_artifacts Artifact[] @relation("artifactsToartifacts")
-
-  @@index([agentId])
-  @@index([parentId])
-  @@index([userId])
-  @@map("artifacts")
-}
-
-model ChatSession {
-  id            String          @id @default(cuid())
-  userId        String
-  startedAt     DateTime        @default(now())
-  lastActivity  DateTime
-  metadata      Json?
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversations conversations[]
-
-  @@index([userId])
-  @@map("chat_sessions")
-}
-
-model Invitation {
-  id                                 String           @id @default(cuid())
-  email                              String
-  token                              String           @unique
-  role                               UserRole
-  status                             InvitationStatus @default(PENDING)
-  invitedBy                          String
-  expiresAt                          DateTime
-  acceptedAt                         DateTime?
-  createdAt                          DateTime         @default(now())
-  users_invitations_emailTousers     User             @relation("invitations_emailTousers", fields: [email], references: [email])
-  users_invitations_invitedByTousers User             @relation("invitations_invitedByTousers", fields: [invitedBy], references: [id], onDelete: Cascade)
-
-  @@index([email])
-  @@index([invitedBy])
-  @@map("invitations")
 }
 
 model agents {
@@ -169,8 +46,8 @@ model agents {
   totalUses              Int                      @default(0)
   tutorialUrl            String?
   updatedAt              DateTime
-  users                  User                     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  artifacts              Artifact[]
+  users                  users                    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  artifacts              artifacts[]
   conversations          conversations[]
   usage_logs             usage_logs[]
   user_agent_permissions user_agent_permissions[]
@@ -195,6 +72,29 @@ model allergies {
   @@index([healthProfileId])
 }
 
+model artifacts {
+  id              String      @id
+  agentId         String
+  userId          String
+  conversationId  String?
+  name            String
+  type            String
+  content         String
+  version         Int         @default(1)
+  parentId        String?
+  metadata        Json?
+  tags            Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime
+  agents          agents      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  artifacts       artifacts?  @relation("artifactsToartifacts", fields: [parentId], references: [id])
+  other_artifacts artifacts[] @relation("artifactsToartifacts")
+
+  @@index([agentId])
+  @@index([parentId])
+  @@index([userId])
+}
+
 model audit_logs {
   id        String   @id
   adminId   String
@@ -203,10 +103,18 @@ model audit_logs {
   details   Json?
   ipAddress String?
   timestamp DateTime @default(now())
-  users     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@index([adminId])
   @@index([timestamp])
+}
+
+model auth_sessions {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model budgets {
@@ -228,18 +136,30 @@ model budgets {
   @@index([financialProfileId])
 }
 
+model chat_sessions {
+  id            String          @id
+  userId        String
+  startedAt     DateTime        @default(now())
+  lastActivity  DateTime
+  metadata      Json?
+  users         users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations conversations[]
+
+  @@index([userId])
+}
+
 model conversations {
-  id            String      @id
+  id            String        @id
   chatSessionId String
   agentId       String
   title         String
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime      @default(now())
   updatedAt     DateTime
-  messageCount  Int         @default(0)
+  messageCount  Int           @default(0)
   summary       String?
-  tokenCount    Int         @default(0)
-  agents        agents      @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  chat_sessions ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+  tokenCount    Int           @default(0)
+  agents        agents        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  chat_sessions chat_sessions @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
   messages      messages[]
 
   @@index([agentId])
@@ -360,10 +280,26 @@ model financial_profiles {
   budgets            budgets[]
   debts              debts[]
   financial_accounts financial_accounts[]
-  users              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users              users                @relation(fields: [userId], references: [id], onDelete: Cascade)
   investments        investments[]
   recurring_payments recurring_payments[]
   transactions       transactions[]
+}
+
+model generated_images {
+  id        String   @id
+  userId    String
+  prompt    String
+  imageUrl  String
+  size      String   @default("1024x1024")
+  quality   String   @default("standard")
+  style     String   @default("vivid")
+  model     String   @default("dall-e-3")
+  cost      Float    @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model health_measurements {
@@ -392,7 +328,7 @@ model health_profiles {
   updatedAt            DateTime
   allergies            allergies[]
   health_measurements  health_measurements[]
-  users                User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users                users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   medical_appointments medical_appointments[]
   medical_conditions   medical_conditions[]
   medications          medications[]
@@ -418,6 +354,23 @@ model investments {
   financial_profiles financial_profiles @relation(fields: [financialProfileId], references: [id], onDelete: Cascade)
 
   @@index([financialProfileId])
+}
+
+model invitations {
+  id                                 String           @id
+  email                              String
+  token                              String           @unique
+  role                               UserRole
+  status                             InvitationStatus @default(PENDING)
+  invitedBy                          String
+  expiresAt                          DateTime
+  acceptedAt                         DateTime?
+  createdAt                          DateTime         @default(now())
+  users_invitations_emailTousers     users            @relation("invitations_emailTousers", fields: [email], references: [email])
+  users_invitations_invitedByTousers users            @relation("invitations_invitedByTousers", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([invitedBy])
 }
 
 model medical_appointments {
@@ -502,7 +455,7 @@ model medications {
 }
 
 model messages {
-  id             String        @id @default(cuid())
+  id             String        @id
   conversationId String
   role           String
   content        String
@@ -530,7 +483,7 @@ model monthly_usage {
   warningsSent  Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime
-  users         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users         users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, year, month])
   @@index([userId])
@@ -668,12 +621,29 @@ model support_tickets {
   createdAt                                 DateTime           @default(now())
   updatedAt                                 DateTime
   support_messages                          support_messages[]
-  users_support_tickets_assignedToIdTousers User?              @relation("support_tickets_assignedToIdTousers", fields: [assignedToId], references: [id])
-  users_support_tickets_userIdTousers       User               @relation("support_tickets_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
+  users_support_tickets_assignedToIdTousers users?             @relation("support_tickets_assignedToIdTousers", fields: [assignedToId], references: [id])
+  users_support_tickets_userIdTousers       users              @relation("support_tickets_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([assignedToId])
   @@index([status])
   @@index([ticketNumber])
+  @@index([userId])
+}
+
+model tasks {
+  id          String    @id
+  userId      String
+  title       String
+  description String?
+  status      String    @default("TODO")
+  priority    String    @default("MEDIUM")
+  tags        String[]  @default([])
+  dueDate     DateTime?
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+
+  @@index([status])
   @@index([userId])
 }
 
@@ -711,7 +681,7 @@ model usage_alerts {
   triggered  Boolean   @default(false)
   resolvedAt DateTime?
   createdAt  DateTime  @default(now())
-  users      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users      users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -734,7 +704,7 @@ model usage_logs {
   errorMessage   String?
   timestamp      DateTime @default(now())
   agents         agents   @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  users          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users          users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([agentId, timestamp])
   @@index([userId, timestamp])
@@ -747,30 +717,80 @@ model user_agent_permissions {
   grantedAt DateTime @default(now())
   grantedBy String?
   agents    agents   @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, agentId])
   @@index([agentId])
   @@index([userId])
 }
 
-enum UserRole {
-  ADMIN
-  USER
-  SUPER_ADMIN
-  MANAGER
-  DEVELOPER
-  GUEST
-  INVITED_AGENT
-  INVITED_STORAGE
-  SUBSCRIBER
+model users {
+  id                                                  String                   @id
+  email                                               String                   @unique
+  emailVerified                                       DateTime?
+  name                                                String?
+  role                                                UserRole                 @default(USER)
+  isActive                                            Boolean                  @default(true)
+  createdAt                                           DateTime                 @default(now())
+  updatedAt                                           DateTime
+  subscriptionTier                                    SubscriptionTier         @default(FREE)
+  aiProfileLastUpdate                                 DateTime?
+  avatar                                              String?
+  bio                                                 String?
+  customLimits                                        Json?
+  dateOfBirth                                         DateTime?
+  displayName                                         String?
+  language                                            String                   @default("es")
+  lastInteraction                                     DateTime?
+  lastResetAt                                         DateTime                 @default(now())
+  monthlyMessages                                     Int                      @default(0)
+  monthlyTokens                                       BigInt                   @default(0)
+  permissions                                         Json?
+  personalityProfile                                  Json?
+  subscriptionEnd                                     DateTime?
+  subscriptionId                                      String?
+  subscriptionStart                                   DateTime?
+  timezone                                            String                   @default("America/Mexico_City")
+  totalMessages                                       Int                      @default(0)
+  totalTokensUsed                                     BigInt                   @default(0)
+  accounts                                            accounts[]
+  agents                                              agents[]
+  audit_logs                                          audit_logs[]
+  auth_sessions                                       auth_sessions[]
+  chat_sessions                                       chat_sessions[]
+  financial_profiles                                  financial_profiles?
+  health_profiles                                     health_profiles?
+  invitations_invitations_emailTousers                invitations[]            @relation("invitations_emailTousers")
+  invitations_invitations_invitedByTousers            invitations[]            @relation("invitations_invitedByTousers")
+  monthly_usage                                       monthly_usage[]
+  support_tickets_support_tickets_assignedToIdTousers support_tickets[]        @relation("support_tickets_assignedToIdTousers")
+  support_tickets_support_tickets_userIdTousers       support_tickets[]        @relation("support_tickets_userIdTousers")
+  usage_alerts                                        usage_alerts[]
+  usage_logs                                          usage_logs[]
+  user_agent_permissions                              user_agent_permissions[]
 }
 
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  EXPIRED
-  CANCELLED
+model verification_tokens {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model voice_sessions {
+  id            String    @id
+  userId        String
+  status        String    @default("ACTIVE")
+  messagesCount Int       @default(0)
+  tokensInput   Int       @default(0)
+  tokensOutput  Int       @default(0)
+  costTotal     Float     @default(0)
+  durationMs    Int?
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+
+  @@index([userId])
 }
 
 enum AlertType {
@@ -806,6 +826,13 @@ enum FileUsageContext {
   BACKUP
   TEMP
   OTHER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }
 
 enum ShareType {
@@ -856,73 +883,14 @@ enum TicketStatus {
   CANCELLED
 }
 
-// ═══════════════════════════════════════════════════════════
-// PHASE 7 MODELS - Added for MVP features
-// ═══════════════════════════════════════════════════════════
-
-// Tarea 1: OpenAI gpt-realtime Integration - Voice Chat Sessions
-model VoiceSession {
-  id            String   @id @default(cuid())
-  userId        String
-
-  status        String   @default("ACTIVE") // ACTIVE, COMPLETED, FAILED
-  messagesCount Int      @default(0)
-
-  tokensInput   Int      @default(0)
-  tokensOutput  Int      @default(0)
-  costTotal     Float    @default(0)
-
-  durationMs    Int?     // Duration in milliseconds
-
-  startedAt     DateTime @default(now())
-  endedAt       DateTime?
-
-  @@index([userId])
-  @@map("voice_sessions")
-}
-
-// Tarea 2: DALL-E 3 Integration - Generated Images
-model GeneratedImage {
-  id         String   @id @default(cuid())
-  userId     String
-
-  prompt     String   @db.Text
-  imageUrl   String   @db.Text
-
-  size       String   @default("1024x1024") // 1024x1024, 1792x1024, 1024x1792
-  quality    String   @default("standard")   // standard, hd
-  style      String   @default("vivid")      // vivid, natural
-
-  model      String   @default("dall-e-3")
-  cost       Float    @default(0)
-
-  createdAt  DateTime @default(now())
-
-  @@index([userId])
-  @@index([createdAt])
-  @@map("generated_images")
-}
-
-// Tarea 3: Task Management - Kanban Board
-model Task {
-  id          String    @id @default(cuid())
-  userId      String
-
-  title       String
-  description String?   @db.Text
-
-  status      String    @default("TODO") // TODO, IN_PROGRESS, DONE
-  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-
-  tags        String[]  @default([])
-
-  dueDate     DateTime?
-  position    Int       @default(0) // For ordering within columns
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([userId])
-  @@index([status])
-  @@map("tasks")
+enum UserRole {
+  ADMIN
+  USER
+  SUPER_ADMIN
+  MANAGER
+  DEVELOPER
+  GUEST
+  INVITED_AGENT
+  INVITED_STORAGE
+  SUBSCRIBER
 }

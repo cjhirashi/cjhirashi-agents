@@ -66,7 +66,7 @@ export async function PATCH(
     const updates = validationResult.data;
 
     // 3. Fetch session
-    const session = await prisma.voiceSession.findUnique({
+    const session = await prisma.voice_sessions.findUnique({
       where: { id: sessionId },
     });
 
@@ -112,7 +112,7 @@ export async function PATCH(
     }
 
     // 6. Update session
-    const updatedSession = await prisma.voiceSession.update({
+    const updatedSession = await prisma.voice_sessions.update({
       where: { id: sessionId },
       data: {
         ...updates,

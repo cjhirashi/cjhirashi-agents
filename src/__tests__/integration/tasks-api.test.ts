@@ -21,12 +21,14 @@ describe('Tasks API', () => {
 
   beforeAll(async () => {
     // Create test user
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
+        id: crypto.randomUUID(),
         email: 'tasks-test@example.com',
         name: 'Tasks Test User',
-        role: 'CLIENT',
-        tier: 'PRO',
+        role: 'USER',
+        subscriptionTier: 'PRO',
+        updatedAt: new Date(),
       },
     });
     testUserId = user.id;
@@ -35,8 +37,8 @@ describe('Tasks API', () => {
   afterAll(async () => {
     // Cleanup
     if (testUserId) {
-      await prisma.task.deleteMany({ where: { userId: testUserId } });
-      await prisma.user.delete({ where: { id: testUserId } });
+      await prisma.tasks.deleteMany({ where: { userId: testUserId } });
+      await prisma.users.delete({ where: { id: testUserId } });
     }
   });
 
@@ -50,9 +52,11 @@ describe('Tasks API', () => {
       };
 
       // Simulate database creation
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: {
+          id: crypto.randomUUID(),
           userId: testUserId,
+          updatedAt: new Date(),
           ...requestBody,
         },
       });
@@ -84,10 +88,12 @@ describe('Tasks API', () => {
     });
 
     it('should set default values', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: {
+          id: crypto.randomUUID(),
           userId: testUserId,
           title: 'Task with defaults',
+          updatedAt: new Date(),
         },
       });
 
@@ -97,20 +103,20 @@ describe('Tasks API', () => {
       expect(task.position).toBeGreaterThanOrEqual(0);
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
     });
 
     it('should assign position at end of column', async () => {
       // Create multiple tasks
       const tasks = await Promise.all([
-        prisma.task.create({
-          data: { userId: testUserId, title: 'Task 1', status: 'TODO' },
+        prisma.tasks.create({
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 1', status: 'TODO', updatedAt: new Date() },
         }),
-        prisma.task.create({
-          data: { userId: testUserId, title: 'Task 2', status: 'TODO' },
+        prisma.tasks.create({
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 2', status: 'TODO', updatedAt: new Date() },
         }),
-        prisma.task.create({
-          data: { userId: testUserId, title: 'Task 3', status: 'TODO' },
+        prisma.tasks.create({
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 3', status: 'TODO', updatedAt: new Date() },
         }),
       ]);
 
@@ -119,7 +125,7 @@ describe('Tasks API', () => {
       expect(tasks[1].position).toBeLessThan(tasks[2].position);
 
       // Cleanup
-      await prisma.task.deleteMany({
+      await prisma.tasks.deleteMany({
         where: { id: { in: tasks.map((t) => t.id) } },
       });
     });
@@ -129,19 +135,19 @@ describe('Tasks API', () => {
     it('should list user tasks', async () => {
       // Create test tasks
       await Promise.all([
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 1', status: 'TODO' },
         }),
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 2', status: 'IN_PROGRESS' },
         }),
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 3', status: 'DONE' },
         }),
       ]);
 
       // Query tasks
-      const tasks = await prisma.task.findMany({
+      const tasks = await prisma.tasks.findMany({
         where: { userId: testUserId },
       });
 
@@ -149,7 +155,7 @@ describe('Tasks API', () => {
     });
 
     it('should group tasks by status', async () => {
-      const tasks = await prisma.task.findMany({
+      const tasks = await prisma.tasks.findMany({
         where: { userId: testUserId },
       });
 
@@ -165,7 +171,7 @@ describe('Tasks API', () => {
     });
 
     it('should filter by status', async () => {
-      const todoTasks = await prisma.task.findMany({
+      const todoTasks = await prisma.tasks.findMany({
         where: { userId: testUserId, status: 'TODO' },
       });
 
@@ -176,28 +182,28 @@ describe('Tasks API', () => {
 
     it('should filter by priority', async () => {
       // Create high priority task
-      const highTask = await prisma.task.create({
+      const highTask = await prisma.tasks.create({
         data: { userId: testUserId, title: 'High Priority', priority: 'HIGH' },
       });
 
-      const highTasks = await prisma.task.findMany({
+      const highTasks = await prisma.tasks.findMany({
         where: { userId: testUserId, priority: 'HIGH' },
       });
 
       expect(highTasks.some((t) => t.id === highTask.id)).toBe(true);
 
       // Cleanup
-      await prisma.task.delete({ where: { id: highTask.id } });
+      await prisma.tasks.delete({ where: { id: highTask.id } });
     });
   });
 
   describe('PATCH /api/v1/tasks/[id]', () => {
     it('should update task', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: testUserId, title: 'Original Title' },
       });
 
-      const updatedTask = await prisma.task.update({
+      const updatedTask = await prisma.tasks.update({
         where: { id: task.id },
         data: {
           title: 'Updated Title',
@@ -211,15 +217,15 @@ describe('Tasks API', () => {
       expect(updatedTask.priority).toBe('URGENT');
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
     });
 
     it('should update tags', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: testUserId, title: 'Task', tags: ['old'] },
       });
 
-      const updatedTask = await prisma.task.update({
+      const updatedTask = await prisma.tasks.update({
         where: { id: task.id },
         data: { tags: ['new', 'updated'] },
       });
@@ -227,17 +233,17 @@ describe('Tasks API', () => {
       expect(updatedTask.tags).toEqual(['new', 'updated']);
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
     });
 
     it('should update due date', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: testUserId, title: 'Task' },
       });
 
       const dueDate = new Date('2025-12-31');
 
-      const updatedTask = await prisma.task.update({
+      const updatedTask = await prisma.tasks.update({
         where: { id: task.id },
         data: { dueDate },
       });
@@ -246,17 +252,17 @@ describe('Tasks API', () => {
       expect(updatedTask.dueDate?.toISOString()).toContain('2025-12-31');
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
     });
   });
 
   describe('PATCH /api/v1/tasks/[id]/status', () => {
     it('should update task status and position', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: testUserId, title: 'Task', status: 'TODO', position: 0 },
       });
 
-      const updatedTask = await prisma.task.update({
+      const updatedTask = await prisma.tasks.update({
         where: { id: task.id },
         data: { status: 'IN_PROGRESS', position: 0 },
       });
@@ -264,19 +270,19 @@ describe('Tasks API', () => {
       expect(updatedTask.status).toBe('IN_PROGRESS');
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
     });
 
     it('should handle position reordering within column', async () => {
       // Create 3 tasks in TODO
       const tasks = await Promise.all([
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 1', status: 'TODO', position: 0 },
         }),
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 2', status: 'TODO', position: 1 },
         }),
-        prisma.task.create({
+        prisma.tasks.create({
           data: { userId: testUserId, title: 'Task 3', status: 'TODO', position: 2 },
         }),
       ]);
@@ -289,7 +295,7 @@ describe('Tasks API', () => {
       expect(tasks[2].position).toBe(2);
 
       // Cleanup
-      await prisma.task.deleteMany({
+      await prisma.tasks.deleteMany({
         where: { id: { in: tasks.map((t) => t.id) } },
       });
     });
@@ -297,30 +303,30 @@ describe('Tasks API', () => {
 
   describe('DELETE /api/v1/tasks/[id]', () => {
     it('should delete task', async () => {
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: testUserId, title: 'To Delete' },
       });
 
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
 
-      const deletedTask = await prisma.task.findUnique({ where: { id: task.id } });
+      const deletedTask = await prisma.tasks.findUnique({ where: { id: task.id } });
 
       expect(deletedTask).toBeNull();
     });
 
     it('should verify ownership before deletion', async () => {
       // Create another user
-      const otherUser = await prisma.user.create({
+      const otherUser = await prisma.users.create({
         data: {
           email: 'other-tasks-user@example.com',
           name: 'Other User',
-          role: 'CLIENT',
+          role: 'USER',
           tier: 'PRO',
         },
       });
 
       // Create task owned by other user
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: { userId: otherUser.id, title: 'Other user task' },
       });
 
@@ -328,15 +334,15 @@ describe('Tasks API', () => {
       expect(task.userId).not.toBe(testUserId);
 
       // Cleanup
-      await prisma.task.delete({ where: { id: task.id } });
-      await prisma.user.delete({ where: { id: otherUser.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
+      await prisma.users.delete({ where: { id: otherUser.id } });
     });
   });
 
   describe('Task lifecycle', () => {
     it('should support complete task lifecycle', async () => {
       // 1. Create
-      const task = await prisma.task.create({
+      const task = await prisma.tasks.create({
         data: {
           userId: testUserId,
           title: 'Lifecycle Task',
@@ -347,7 +353,7 @@ describe('Tasks API', () => {
       expect(task.status).toBe('TODO');
 
       // 2. Move to IN_PROGRESS
-      const inProgressTask = await prisma.task.update({
+      const inProgressTask = await prisma.tasks.update({
         where: { id: task.id },
         data: { status: 'IN_PROGRESS' },
       });
@@ -355,7 +361,7 @@ describe('Tasks API', () => {
       expect(inProgressTask.status).toBe('IN_PROGRESS');
 
       // 3. Complete (move to DONE)
-      const doneTask = await prisma.task.update({
+      const doneTask = await prisma.tasks.update({
         where: { id: task.id },
         data: { status: 'DONE' },
       });
@@ -363,9 +369,9 @@ describe('Tasks API', () => {
       expect(doneTask.status).toBe('DONE');
 
       // 4. Delete
-      await prisma.task.delete({ where: { id: task.id } });
+      await prisma.tasks.delete({ where: { id: task.id } });
 
-      const deletedTask = await prisma.task.findUnique({ where: { id: task.id } });
+      const deletedTask = await prisma.tasks.findUnique({ where: { id: task.id } });
       expect(deletedTask).toBeNull();
     });
   });

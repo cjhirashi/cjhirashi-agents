@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
     // 7. Create session in database
     // Note: VoiceSession model is simple and only tracks basic metrics
     // Configuration details (agentId, voice, temperature) are passed to client
-    const session = await prisma.voiceSession.create({
+    const session = await prisma.voice_sessions.create({
       data: {
         userId,
         status: 'ACTIVE',

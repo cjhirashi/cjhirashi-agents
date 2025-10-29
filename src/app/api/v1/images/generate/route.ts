@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const { prompt, size, quality, style } = validationResult.data;
 
     // 3. Get user tier
-    const userWithTier = await prisma.user.findUnique({
+    const userWithTier = await prisma.users.findUnique({
       where: { id: userId },
       select: { subscriptionTier: true },
     });
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const imagesGeneratedToday = await prisma.generatedImage.count({
+    const imagesGeneratedToday = await prisma.generated_images.count({
       where: {
         userId,
         createdAt: { gte: today },
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     const cost = calculateCost(size, quality);
 
     // 7. Save to database
-    const generatedImage = await prisma.generatedImage.create({
+    const generatedImage = await prisma.generated_images.create({
       data: {
         userId,
         prompt,

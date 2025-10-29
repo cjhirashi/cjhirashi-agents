@@ -74,7 +74,7 @@ async function chatSendHandler(request: Request) {
     });
 
     // 4. Verify session ownership
-    const session = await prisma.chatSession.findFirst({
+    const session = await prisma.chat_sessions.findFirst({
       where: {
         id: validated.sessionId,
         userId
@@ -272,7 +272,7 @@ async function chatSendHandler(request: Request) {
           });
 
           // Update session last message time
-          await prisma.chatSession.update({
+          await prisma.chat_sessions.update({
             where: { id: validated.sessionId },
             data: { lastActivity: new Date() }
           });

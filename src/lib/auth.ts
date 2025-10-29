@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         // Find user by email
-        const user = await prisma.user.findUnique({
+        const user = await prisma.users.findUnique({
           where: { email: credentials.email as string },
           select: {
             id: true,
@@ -172,13 +172,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // For OAuth providers, ensure user is created/updated
       if (account?.provider !== 'credentials' && user.email) {
         // Check if user exists
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.users.findUnique({
           where: { email: user.email },
         });
 
         // If user doesn't exist, create with default role (USER) and tier (FREE)
         if (!existingUser) {
-          await prisma.user.create({
+          await prisma.users.create({
             data: {
               email: user.email,
               name: user.name,
@@ -220,7 +220,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user }) {
       // Update lastInteraction timestamp
       if (user.id) {
-        await prisma.user.update({
+        await prisma.users.update({
           where: { id: user.id },
           data: { lastInteraction: new Date() },
         });

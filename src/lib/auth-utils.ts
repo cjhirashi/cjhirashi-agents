@@ -21,7 +21,7 @@ export async function getCurrentUser() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: { email: session.user.email },
     include: {
       agentPermissions: {
@@ -75,7 +75,7 @@ export async function hasAgentAccess(agentId: string) {
   if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) return true;
 
   // Check if agent is public
-  const agent = await prisma.agent.findUnique({
+  const agent = await prisma.agents.findUnique({
     where: { id: agentId },
     select: { isPublic: true, createdBy: true },
   });
@@ -106,13 +106,13 @@ export async function getAccessibleAgents() {
 
   // Admins and Super Admins have access to all agents
   if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
-    return await prisma.agent.findMany({
+    return await prisma.agents.findMany({
       orderBy: { createdAt: 'desc' },
     });
   }
 
   // Get public agents, created agents, and agents with explicit permissions
-  return await prisma.agent.findMany({
+  return await prisma.agents.findMany({
     where: {
       OR: [
         { isPublic: true },

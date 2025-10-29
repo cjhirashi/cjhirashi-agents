@@ -39,7 +39,7 @@ async function createSessionHandler(request: Request) {
     });
 
     // 4. Create session (store title and agentIds in metadata)
-    const session = await prisma.chatSession.create({
+    const session = await prisma.chat_sessions.create({
       data: {
         userId,
         lastActivity: new Date(),
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
 
     // 4. Fetch sessions with pagination
     const [sessions, total] = await Promise.all([
-      prisma.chatSession.findMany({
+      prisma.chat_sessions.findMany({
         where: {
           userId
         },
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
-      prisma.chatSession.count({
+      prisma.chat_sessions.count({
         where: { userId }
       })
     ]);

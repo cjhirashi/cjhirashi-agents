@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function setAdmin(email: string) {
   try {
-    const user = await prisma.user.update({
+    const user = await prisma.users.update({
       where: { email },
       data: { role: UserRole.ADMIN },
       select: {

@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   // Fetch dashboard data in parallel
   const [chatSessions, stats] = await Promise.all([
     // Recent chat sessions (last 5)
-    prisma.chatSession.findMany({
+    prisma.chat_sessions.findMany({
       where: { userId },
       take: 5,
       orderBy: { lastActivity: 'desc' },
@@ -47,10 +47,10 @@ export default async function DashboardPage() {
     // Stats
     Promise.all([
       // Total chat sessions
-      prisma.chatSession.count({ where: { userId } }),
+      prisma.chat_sessions.count({ where: { userId } }),
 
       // Active sessions (last 7 days)
-      prisma.chatSession.count({
+      prisma.chat_sessions.count({
         where: {
           userId,
           lastActivity: {

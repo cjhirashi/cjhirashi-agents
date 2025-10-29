@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Fetch images
     const [images, total] = await Promise.all([
-      prisma.generatedImage.findMany({
+      prisma.generated_images.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
         },
       }),
-      prisma.generatedImage.count({
+      prisma.generated_images.count({
         where: { userId },
       }),
     ]);

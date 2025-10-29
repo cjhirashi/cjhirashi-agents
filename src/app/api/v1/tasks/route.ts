@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       validationResult.data;
 
     // 3. Get current max position for the status column
-    const maxPositionTask = await prisma.task.findFirst({
+    const maxPositionTask = await prisma.tasks.findFirst({
       where: { userId, status },
       orderBy: { position: 'desc' },
       select: { position: true },
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const position = (maxPositionTask?.position ?? -1) + 1;
 
     // 4. Create task
-    const task = await prisma.task.create({
+    const task = await prisma.tasks.create({
       data: {
         userId,
         title,
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Fetch tasks
-    const tasks = await prisma.task.findMany({
+    const tasks = await prisma.tasks.findMany({
       where,
       orderBy: [{ status: 'asc' }, { position: 'asc' }],
     });

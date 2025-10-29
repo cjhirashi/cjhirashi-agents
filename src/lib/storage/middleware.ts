@@ -51,7 +51,7 @@ export async function checkStorageAccess(): Promise<AccessCheckResult> {
     // 3. Obtener rol del usuario (necesitamos la base de datos)
     const { prisma } = await import('@/lib/prisma');
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: session.user.id },
       select: { id: true, role: true, email: true },
     });

@@ -24,10 +24,10 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    user: {
+    users: {
       findUnique: vi.fn(),
     },
-    agent: {
+    agents: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
@@ -60,7 +60,7 @@ describe('Auth Utilities - Session Helpers', () => {
   describe('getSession', () => {
     it('should return session when authenticated', async () => {
       const mockSession = {
-        user: {
+        users: {
           email: 'user@example.com',
           name: 'Test User',
         },
@@ -86,7 +86,7 @@ describe('Auth Utilities - Session Helpers', () => {
   describe('getCurrentUser', () => {
     it('should return user with permissions when authenticated', async () => {
       const mockSession = {
-        user: {
+        users: {
           email: 'user@example.com',
           name: 'Test User',
         },
@@ -96,7 +96,7 @@ describe('Auth Utilities - Session Helpers', () => {
         id: 'user-123',
         email: 'user@example.com',
         name: 'Test User',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         tier: 'PRO',
         isActive: true,
         agentPermissions: [
@@ -104,7 +104,7 @@ describe('Auth Utilities - Session Helpers', () => {
             id: 'perm-1',
             agentId: 'agent-1',
             userId: 'user-123',
-            agent: {
+            agents: {
               id: 'agent-1',
               name: 'Test Agent',
               isPublic: false,
@@ -114,12 +114,12 @@ describe('Auth Utilities - Session Helpers', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const user = await getCurrentUser();
 
       expect(user).toEqual(mockUser);
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      expect(prisma.users.findUnique).toHaveBeenCalledWith({
         where: { email: 'user@example.com' },
         include: {
           agentPermissions: {
@@ -133,13 +133,13 @@ describe('Auth Utilities - Session Helpers', () => {
 
     it('should return null when session has no email', async () => {
       vi.mocked(auth).mockResolvedValue({
-        user: { name: 'Test' },
+        users: { name: 'Test' },
       } as any);
 
       const user = await getCurrentUser();
 
       expect(user).toBeNull();
-      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(prisma.users.findUnique).not.toHaveBeenCalled();
     });
 
     it('should return null when not authenticated', async () => {
@@ -164,7 +164,7 @@ describe('Auth Utilities - Authorization Checks', () => {
   describe('isAdmin', () => {
     it('should return true for ADMIN role', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -175,7 +175,7 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await isAdmin();
 
@@ -184,7 +184,7 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return true for SUPER_ADMIN role', async () => {
       const mockSession = {
-        user: { email: 'superadmin@example.com' },
+        users: { email: 'superadmin@example.com' },
       };
 
       const mockUser = {
@@ -195,7 +195,7 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await isAdmin();
 
@@ -204,18 +204,18 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return false for CLIENT role', async () => {
       const mockSession = {
-        user: { email: 'client@example.com' },
+        users: { email: 'client@example.com' },
       };
 
       const mockUser = {
         id: 'client-1',
         email: 'client@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         agentPermissions: [],
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await isAdmin();
 
@@ -234,7 +234,7 @@ describe('Auth Utilities - Authorization Checks', () => {
   describe('isSuperAdmin', () => {
     it('should return true only for SUPER_ADMIN role', async () => {
       const mockSession = {
-        user: { email: 'superadmin@example.com' },
+        users: { email: 'superadmin@example.com' },
       };
 
       const mockUser = {
@@ -245,7 +245,7 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await isSuperAdmin();
 
@@ -254,7 +254,7 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return false for ADMIN role', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -265,7 +265,7 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await isSuperAdmin();
 
@@ -276,7 +276,7 @@ describe('Auth Utilities - Authorization Checks', () => {
   describe('hasAgentAccess', () => {
     it('should return true for admin users', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -287,7 +287,7 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const result = await hasAgentAccess('any-agent-id');
 
@@ -296,13 +296,13 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return true for public agents (active user)', async () => {
       const mockSession = {
-        user: { email: 'client@example.com' },
+        users: { email: 'client@example.com' },
       };
 
       const mockUser = {
         id: 'client-1',
         email: 'client@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: true,
         agentPermissions: [],
       };
@@ -314,8 +314,8 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findUnique).mockResolvedValue(mockAgent as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findUnique).mockResolvedValue(mockAgent as any);
 
       const result = await hasAgentAccess('agent-1');
 
@@ -324,13 +324,13 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return false for public agents (inactive user)', async () => {
       const mockSession = {
-        user: { email: 'client@example.com' },
+        users: { email: 'client@example.com' },
       };
 
       const mockUser = {
         id: 'client-1',
         email: 'client@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: false,
         agentPermissions: [],
       };
@@ -342,8 +342,8 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findUnique).mockResolvedValue(mockAgent as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findUnique).mockResolvedValue(mockAgent as any);
 
       const result = await hasAgentAccess('agent-1');
 
@@ -352,13 +352,13 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return true for agent creator', async () => {
       const mockSession = {
-        user: { email: 'creator@example.com' },
+        users: { email: 'creator@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'creator@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: true,
         agentPermissions: [],
       };
@@ -370,8 +370,8 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findUnique).mockResolvedValue(mockAgent as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findUnique).mockResolvedValue(mockAgent as any);
 
       const result = await hasAgentAccess('agent-1');
 
@@ -380,13 +380,13 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return true for users with explicit permission', async () => {
       const mockSession = {
-        user: { email: 'user@example.com' },
+        users: { email: 'user@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: true,
         agentPermissions: [
           {
@@ -404,8 +404,8 @@ describe('Auth Utilities - Authorization Checks', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findUnique).mockResolvedValue(mockAgent as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findUnique).mockResolvedValue(mockAgent as any);
 
       const result = await hasAgentAccess('agent-1');
 
@@ -414,19 +414,19 @@ describe('Auth Utilities - Authorization Checks', () => {
 
     it('should return false when agent not found', async () => {
       const mockSession = {
-        user: { email: 'user@example.com' },
+        users: { email: 'user@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         agentPermissions: [],
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findUnique).mockResolvedValue(null);
 
       const result = await hasAgentAccess('non-existent-agent');
 
@@ -455,7 +455,7 @@ describe('Auth Utilities - Query Helpers', () => {
   describe('getAccessibleAgents', () => {
     it('should return all agents for admin users', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -471,39 +471,39 @@ describe('Auth Utilities - Query Helpers', () => {
       ];
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findMany).mockResolvedValue(mockAgents as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findMany).mockResolvedValue(mockAgents as any);
 
       const agents = await getAccessibleAgents();
 
       expect(agents).toEqual(mockAgents);
-      expect(prisma.agent.findMany).toHaveBeenCalledWith({
+      expect(prisma.agents.findMany).toHaveBeenCalledWith({
         orderBy: { createdAt: 'desc' },
       });
     });
 
     it('should return filtered agents for regular users', async () => {
       const mockSession = {
-        user: { email: 'user@example.com' },
+        users: { email: 'user@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         agentPermissions: [],
       };
 
       const mockAgents = [{ id: 'agent-1', name: 'Public Agent' }];
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
-      vi.mocked(prisma.agent.findMany).mockResolvedValue(mockAgents as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.agents.findMany).mockResolvedValue(mockAgents as any);
 
       const agents = await getAccessibleAgents();
 
       expect(agents).toEqual(mockAgents);
-      expect(prisma.agent.findMany).toHaveBeenCalledWith({
+      expect(prisma.agents.findMany).toHaveBeenCalledWith({
         where: {
           OR: [
             { isPublic: true },
@@ -525,7 +525,7 @@ describe('Auth Utilities - Query Helpers', () => {
       const agents = await getAccessibleAgents();
 
       expect(agents).toEqual([]);
-      expect(prisma.agent.findMany).not.toHaveBeenCalled();
+      expect(prisma.agents.findMany).not.toHaveBeenCalled();
     });
   });
 });
@@ -542,19 +542,19 @@ describe('Auth Utilities - Guards', () => {
   describe('requireAuth', () => {
     it('should return user when authenticated and active', async () => {
       const mockSession = {
-        user: { email: 'user@example.com' },
+        users: { email: 'user@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: true,
         agentPermissions: [],
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const user = await requireAuth();
 
@@ -571,19 +571,19 @@ describe('Auth Utilities - Guards', () => {
 
     it('should throw when user is inactive', async () => {
       const mockSession = {
-        user: { email: 'user@example.com' },
+        users: { email: 'user@example.com' },
       };
 
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         isActive: false,
         agentPermissions: [],
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       await expect(requireAuth()).rejects.toThrow(
         'Unauthorized: Account is inactive'
@@ -594,7 +594,7 @@ describe('Auth Utilities - Guards', () => {
   describe('requireAdmin', () => {
     it('should return user when user is ADMIN', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -605,7 +605,7 @@ describe('Auth Utilities - Guards', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const user = await requireAdmin();
 
@@ -614,7 +614,7 @@ describe('Auth Utilities - Guards', () => {
 
     it('should return user when user is SUPER_ADMIN', async () => {
       const mockSession = {
-        user: { email: 'superadmin@example.com' },
+        users: { email: 'superadmin@example.com' },
       };
 
       const mockUser = {
@@ -625,7 +625,7 @@ describe('Auth Utilities - Guards', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const user = await requireAdmin();
 
@@ -634,18 +634,18 @@ describe('Auth Utilities - Guards', () => {
 
     it('should throw when user is CLIENT', async () => {
       const mockSession = {
-        user: { email: 'client@example.com' },
+        users: { email: 'client@example.com' },
       };
 
       const mockUser = {
         id: 'client-1',
         email: 'client@example.com',
-        role: UserRole.CLIENT,
+        role: UserRole.USER,
         agentPermissions: [],
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       await expect(requireAdmin()).rejects.toThrow(
         'Unauthorized: Admin access required'
@@ -664,7 +664,7 @@ describe('Auth Utilities - Guards', () => {
   describe('requireSuperAdmin', () => {
     it('should return user when user is SUPER_ADMIN', async () => {
       const mockSession = {
-        user: { email: 'superadmin@example.com' },
+        users: { email: 'superadmin@example.com' },
       };
 
       const mockUser = {
@@ -675,7 +675,7 @@ describe('Auth Utilities - Guards', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       const user = await requireSuperAdmin();
 
@@ -684,7 +684,7 @@ describe('Auth Utilities - Guards', () => {
 
     it('should throw when user is ADMIN (not SUPER_ADMIN)', async () => {
       const mockSession = {
-        user: { email: 'admin@example.com' },
+        users: { email: 'admin@example.com' },
       };
 
       const mockUser = {
@@ -695,7 +695,7 @@ describe('Auth Utilities - Guards', () => {
       };
 
       vi.mocked(auth).mockResolvedValue(mockSession as any);
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(prisma.users.findUnique).mockResolvedValue(mockUser as any);
 
       await expect(requireSuperAdmin()).rejects.toThrow(
         'Unauthorized: Super Admin access required'
