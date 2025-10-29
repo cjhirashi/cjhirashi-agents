@@ -41,6 +41,7 @@ async function createSessionHandler(request: Request) {
     // 4. Create session (store title and agentIds in metadata)
     const session = await prisma.chat_sessions.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         lastActivity: new Date(),
         metadata: {

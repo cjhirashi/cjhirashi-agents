@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
     // 7. Save to database
     const generatedImage = await prisma.generated_images.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         prompt,
         imageUrl: result.url,

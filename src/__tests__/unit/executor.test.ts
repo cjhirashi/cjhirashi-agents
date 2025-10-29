@@ -8,10 +8,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { CustomAgent } from '@prisma/client';
+import type { agents } from '@prisma/client';
 
 describe('Agent Executor - Core Logic', () => {
-  let mockAgent: CustomAgent;
+  let mockAgent: agents;
 
   beforeEach(() => {
     mockAgent = {
@@ -20,18 +20,22 @@ describe('Agent Executor - Core Logic', () => {
       name: 'Test Agent',
       description: 'A test agent',
       systemPrompt: 'You are a helpful test assistant.',
-      modelId: 'claude-3-5-sonnet-20241022',
-      modelProvider: 'anthropic',
-      tools: [],
-      visibilityLevel: 'PUBLIC',
-      category: 'general',
-      tier: 'FREE',
+      model: 'claude-3-5-sonnet-20241022',
+      config: null,
+      endpointUrl: 'https://test.example.com',
       isPublic: false,
-      additionalCost: null,
-      complexity: 5,
       createdAt: new Date(),
+      averageRating: null,
+      capabilities: null,
+      category: 'general',
+      documentationUrl: null,
+      isActive: true,
+      slug: 'test-agent',
+      totalMessages: 0,
+      totalUses: 0,
+      tutorialUrl: null,
       updatedAt: new Date(),
-    };
+    } as agents;
   });
 
   describe('Cost Calculation', () => {
@@ -157,23 +161,17 @@ describe('Agent Executor - Core Logic', () => {
     });
 
     it('should use agent model preference', () => {
-      expect(mockAgent.modelId).toBe('claude-3-5-sonnet-20241022');
-      expect(mockAgent.modelProvider).toBe('anthropic');
+      expect(mockAgent.model).toBe('claude-3-5-sonnet-20241022');
     });
 
-    it('should handle agent with no tools', () => {
-      expect(mockAgent.tools).toEqual([]);
-      expect(mockAgent.tools.length).toBe(0);
+    it('should have agent config', () => {
+      // Config can store tools and other settings
+      expect(mockAgent.config).toBeDefined();
     });
 
-    it('should handle agent with tools', () => {
-      const agentWithTools = {
-        ...mockAgent,
-        tools: ['web_search', 'calculator'],
-      };
-
-      expect(agentWithTools.tools).toEqual(['web_search', 'calculator']);
-      expect(agentWithTools.tools.length).toBe(2);
+    it.skip('should handle agent with tools', () => {
+      // Note: tools field not in schema - stored in config JSON
+      // This test is skipped until config structure is defined
     });
   });
 
@@ -281,13 +279,13 @@ describe('Agent Executor - Core Logic', () => {
         executionId: 'test-exec-id',
         agentId: 'test-agent-id',
         agentName: 'Test Agent',
-        modelId: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-20241022',
         timestamp: new Date().toISOString(),
       };
 
       expect(startEvent.executionId).toBe('test-exec-id');
       expect(startEvent.agentId).toBe('test-agent-id');
-      expect(startEvent.modelId).toBe('claude-3-5-sonnet-20241022');
+      expect(startEvent.model).toBe('claude-3-5-sonnet-20241022');
     });
 
     it('should format chunk event correctly', () => {

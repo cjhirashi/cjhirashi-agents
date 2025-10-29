@@ -75,7 +75,7 @@ describe('Auth Utilities - Session Helpers', () => {
     });
 
     it('should return null when not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       const session = await getSession();
 
@@ -143,7 +143,7 @@ describe('Auth Utilities - Session Helpers', () => {
     });
 
     it('should return null when not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       const user = await getCurrentUser();
 
@@ -223,7 +223,7 @@ describe('Auth Utilities - Authorization Checks', () => {
     });
 
     it('should return false when user not found', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       const result = await isAdmin();
 
@@ -434,7 +434,7 @@ describe('Auth Utilities - Authorization Checks', () => {
     });
 
     it('should return false when user not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       const result = await hasAgentAccess('any-agent');
 
@@ -520,7 +520,7 @@ describe('Auth Utilities - Query Helpers', () => {
     });
 
     it('should return empty array when user not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       const agents = await getAccessibleAgents();
 
@@ -562,7 +562,7 @@ describe('Auth Utilities - Guards', () => {
     });
 
     it('should throw when user not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       await expect(requireAuth()).rejects.toThrow(
         'Unauthorized: Authentication required'
@@ -653,7 +653,7 @@ describe('Auth Utilities - Guards', () => {
     });
 
     it('should throw when user not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       await expect(requireAdmin()).rejects.toThrow(
         'Unauthorized: Admin access required'
@@ -703,7 +703,7 @@ describe('Auth Utilities - Guards', () => {
     });
 
     it('should throw when user not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(undefined as any);
 
       await expect(requireSuperAdmin()).rejects.toThrow(
         'Unauthorized: Super Admin access required'

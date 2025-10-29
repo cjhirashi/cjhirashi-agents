@@ -136,13 +136,13 @@ describe('Tasks API', () => {
       // Create test tasks
       await Promise.all([
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 1', status: 'TODO' },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 1', status: 'TODO', updatedAt: new Date() },
         }),
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 2', status: 'IN_PROGRESS' },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 2', status: 'IN_PROGRESS', updatedAt: new Date() },
         }),
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 3', status: 'DONE' },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 3', status: 'DONE', updatedAt: new Date() },
         }),
       ]);
 
@@ -183,7 +183,7 @@ describe('Tasks API', () => {
     it('should filter by priority', async () => {
       // Create high priority task
       const highTask = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'High Priority', priority: 'HIGH' },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'High Priority', priority: 'HIGH', updatedAt: new Date() },
       });
 
       const highTasks = await prisma.tasks.findMany({
@@ -200,7 +200,7 @@ describe('Tasks API', () => {
   describe('PATCH /api/v1/tasks/[id]', () => {
     it('should update task', async () => {
       const task = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'Original Title' },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'Original Title', updatedAt: new Date() },
       });
 
       const updatedTask = await prisma.tasks.update({
@@ -222,7 +222,7 @@ describe('Tasks API', () => {
 
     it('should update tags', async () => {
       const task = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'Task', tags: ['old'] },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task', tags: ['old'], updatedAt: new Date() },
       });
 
       const updatedTask = await prisma.tasks.update({
@@ -238,7 +238,7 @@ describe('Tasks API', () => {
 
     it('should update due date', async () => {
       const task = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'Task' },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task', updatedAt: new Date() },
       });
 
       const dueDate = new Date('2025-12-31');
@@ -259,7 +259,7 @@ describe('Tasks API', () => {
   describe('PATCH /api/v1/tasks/[id]/status', () => {
     it('should update task status and position', async () => {
       const task = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'Task', status: 'TODO', position: 0 },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task', status: 'TODO', position: 0, updatedAt: new Date() },
       });
 
       const updatedTask = await prisma.tasks.update({
@@ -277,13 +277,13 @@ describe('Tasks API', () => {
       // Create 3 tasks in TODO
       const tasks = await Promise.all([
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 1', status: 'TODO', position: 0 },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 1', status: 'TODO', position: 0, updatedAt: new Date() },
         }),
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 2', status: 'TODO', position: 1 },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 2', status: 'TODO', position: 1, updatedAt: new Date() },
         }),
         prisma.tasks.create({
-          data: { userId: testUserId, title: 'Task 3', status: 'TODO', position: 2 },
+          data: { id: crypto.randomUUID(), userId: testUserId, title: 'Task 3', status: 'TODO', position: 2, updatedAt: new Date() },
         }),
       ]);
 
@@ -304,7 +304,7 @@ describe('Tasks API', () => {
   describe('DELETE /api/v1/tasks/[id]', () => {
     it('should delete task', async () => {
       const task = await prisma.tasks.create({
-        data: { userId: testUserId, title: 'To Delete' },
+        data: { id: crypto.randomUUID(), userId: testUserId, title: 'To Delete', updatedAt: new Date() },
       });
 
       await prisma.tasks.delete({ where: { id: task.id } });
@@ -318,16 +318,18 @@ describe('Tasks API', () => {
       // Create another user
       const otherUser = await prisma.users.create({
         data: {
+          id: crypto.randomUUID(),
           email: 'other-tasks-user@example.com',
           name: 'Other User',
           role: 'USER',
-          tier: 'PRO',
+          subscriptionTier: 'PRO',
+          updatedAt: new Date(),
         },
       });
 
       // Create task owned by other user
       const task = await prisma.tasks.create({
-        data: { userId: otherUser.id, title: 'Other user task' },
+        data: { id: crypto.randomUUID(), userId: otherUser.id, title: 'Other user task', updatedAt: new Date() },
       });
 
       // Verify ownership check would fail
@@ -344,9 +346,11 @@ describe('Tasks API', () => {
       // 1. Create
       const task = await prisma.tasks.create({
         data: {
+          id: crypto.randomUUID(),
           userId: testUserId,
           title: 'Lifecycle Task',
           status: 'TODO',
+          updatedAt: new Date(),
         },
       });
 

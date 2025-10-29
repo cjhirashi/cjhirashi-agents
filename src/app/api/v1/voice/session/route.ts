@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
     // Configuration details (agentId, voice, temperature) are passed to client
     const session = await prisma.voice_sessions.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         status: 'ACTIVE',
       },

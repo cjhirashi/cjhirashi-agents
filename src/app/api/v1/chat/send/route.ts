@@ -88,6 +88,7 @@ async function chatSendHandler(request: Request) {
     // 5. Save user message
     const userMessage = await prisma.messages.create({
       data: {
+        id: crypto.randomUUID(),
         conversationId: validated.sessionId,
         role: 'user',
         content: validated.message,
@@ -252,6 +253,7 @@ async function chatSendHandler(request: Request) {
           // Save assistant message
           await prisma.messages.create({
             data: {
+              id: crypto.randomUUID(),
               conversationId: validated.sessionId,
               role: 'assistant',
               content: fullContent,

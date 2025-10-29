@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
     // 4. Create task
     const task = await prisma.tasks.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         title,
         description,
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
         tags,
         dueDate: dueDate ? new Date(dueDate) : null,
         position,
+        updatedAt: new Date(),
       },
     });
 

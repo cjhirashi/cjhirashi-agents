@@ -17,10 +17,53 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { PineconeStore } from '@langchain/pinecone';
 import { Document as LangChainDocument } from '@langchain/core/documents';
 import { put } from '@vercel/blob';
-import prisma from '@/lib/db/prisma';
 import { getPineconeIndex } from '@/lib/pinecone';
 import logger from '@/lib/logging/logger';
-import type { Document, DocumentStatus, DocumentContentType } from '@prisma/client';
+// Note: Document model not yet in schema - will be added in future phase
+// import type { Document, DocumentStatus, DocumentContentType } from '@prisma/client';
+
+// Temporary type definitions until Document model is added to schema
+type DocumentStatus = 'PENDING' | 'PROCESSING' | 'READY' | 'ERROR';
+type DocumentContentType = 'PDF' | 'TEXT' | 'MARKDOWN';
+
+// Temporary Document interface matching expected schema
+interface Document {
+  id: string;
+  userId: string;
+  filename: string;
+  contentType: DocumentContentType;
+  size: number;
+  blobUrl: string;
+  status: DocumentStatus;
+  errorMessage?: string | null;
+  chunkCount?: number;
+  processedAt?: Date | null;
+  createdAt: Date;
+}
+
+// Mock prisma client with document methods for type checking
+// This is a stub until Document model is added to schema
+const prisma = {
+  document: {
+    create: async (args: any): Promise<Document> => {
+      throw new Error('Document model not yet implemented in schema');
+    },
+    update: async (args: any): Promise<Document> => {
+      throw new Error('Document model not yet implemented in schema');
+    },
+    findUnique: async (args: any): Promise<Document | null> => {
+      throw new Error('Document model not yet implemented in schema');
+    },
+  },
+  documentChunk: {
+    createMany: async (args: any): Promise<any> => {
+      throw new Error('DocumentChunk model not yet implemented in schema');
+    },
+    deleteMany: async (args: any): Promise<any> => {
+      throw new Error('DocumentChunk model not yet implemented in schema');
+    },
+  },
+} as any;
 
 // ═══════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
@@ -120,6 +163,10 @@ export async function processDocument(
         chunkOverlap,
       },
     });
+
+    if (!document) {
+      throw new Error('Failed to create document record');
+    }
 
     logger.info('[RAG Pipeline] Document record created', {
       documentId: document.id,
@@ -241,7 +288,7 @@ export async function processDocument(
     // STEP 7: Update Document record (COMPLETED)
     // ═══════════════════════════════════════════════════════
 
-    document = await prisma.document.update({
+    const updatedDocument = await prisma.document.update({
       where: { id: document.id },
       data: {
         status: 'COMPLETED',
@@ -251,13 +298,13 @@ export async function processDocument(
     });
 
     logger.info('[RAG Pipeline] Document processing completed', {
-      documentId: document.id,
-      totalChunks: document.totalChunks,
-      status: document.status,
+      documentId: updatedDocument.id,
+      totalChunks: langchainDocs.length,
+      status: updatedDocument.status,
     });
 
     return {
-      document,
+      document: updatedDocument,
       success: true,
       chunksCreated: langchainDocs.length,
       vectorsStored: langchainDocs.length,
@@ -386,8 +433,8 @@ export async function deleteDocument(documentId: string, userId: string): Promis
 
     if (pineconeIndex && document.chunks.length > 0) {
       const vectorIds = document.chunks
-        .map((chunk) => chunk.vectorId)
-        .filter((id): id is string => id !== null);
+        .map((chunk: any) => chunk.vectorId)
+        .filter((id: any): id is string => id !== null);
 
       if (vectorIds.length > 0) {
         await pineconeIndex.namespace(userId).deleteMany(vectorIds);

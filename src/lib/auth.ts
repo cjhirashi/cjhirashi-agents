@@ -180,6 +180,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!existingUser) {
           await prisma.users.create({
             data: {
+              id: crypto.randomUUID(),
               email: user.email,
               name: user.name,
               avatar: user.image,
@@ -187,6 +188,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               role: 'USER',
               subscriptionTier: 'FREE',
               isActive: true,
+              updatedAt: new Date(),
             },
           });
         }

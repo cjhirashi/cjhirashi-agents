@@ -20,10 +20,12 @@ describe('Voice Session API', () => {
     // Create test user
     const user = await prisma.users.create({
       data: {
+        id: crypto.randomUUID(),
         email: 'voice-test@example.com',
         name: 'Voice Test User',
         role: 'USER',
-        tier: 'PRO',
+        subscriptionTier: 'PRO',
+        updatedAt: new Date(),
       },
     });
     testUserId = user.id;
@@ -31,16 +33,16 @@ describe('Voice Session API', () => {
     // Create test agent
     const agent = await prisma.agents.create({
       data: {
+        id: crypto.randomUUID(),
         name: 'Test Voice Agent',
         description: 'Test agent for voice sessions',
         systemPrompt: 'You are a test assistant.',
-        modelId: 'gpt-4o',
-        modelProvider: 'openai',
+        model: 'gpt-4o',
         category: 'general',
-        tier: 'PRO',
-        status: 'ACTIVE',
         createdBy: testUserId,
-        tools: [],
+        slug: 'test-voice-agent-' + Date.now(),
+        endpointUrl: 'https://test.example.com',
+        updatedAt: new Date(),
       },
     });
     testAgentId = agent.id;
@@ -71,6 +73,7 @@ describe('Voice Session API', () => {
       // These will be added in a future migration
       const session = await prisma.voice_sessions.create({
         data: {
+          id: crypto.randomUUID(),
           userId: testUserId,
           // agentId: testAgentId,
           // voice: requestBody.voice,
@@ -125,20 +128,21 @@ describe('Voice Session API', () => {
       // Create inactive agent
       const inactiveAgent = await prisma.agents.create({
         data: {
+          id: crypto.randomUUID(),
           name: 'Inactive Agent',
           description: 'Test inactive agent',
           systemPrompt: 'Test prompt',
-          modelId: 'gpt-4o',
-          modelProvider: 'openai',
+          model: 'gpt-4o',
           category: 'general',
-          tier: 'PRO',
-          status: 'INACTIVE',
           createdBy: testUserId,
-          tools: [],
+          slug: 'inactive-agent-' + Date.now(),
+          endpointUrl: 'https://test.example.com',
+          isActive: false,
+          updatedAt: new Date(),
         },
       });
 
-      expect(inactiveAgent.status).toBe('INACTIVE');
+      expect(inactiveAgent.isActive).toBe(false);
 
       // Cleanup
       await prisma.agents.delete({ where: { id: inactiveAgent.id } });
@@ -230,6 +234,7 @@ describe('Voice Session API', () => {
       // 1. Create session
       const newSession = await prisma.voice_sessions.create({
         data: {
+          id: crypto.randomUUID(),
           userId: testUserId,
           // agentId: testAgentId, // Field doesn't exist yet
           // voice: 'echo', // Field doesn't exist yet

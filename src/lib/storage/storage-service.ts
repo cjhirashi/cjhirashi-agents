@@ -128,26 +128,27 @@ export class StorageService {
     // 7. Subir al adapter
     const uploadResult = await this.adapter.upload(fileBuffer, storagePath, {
       contentType: mimeType,
-      metadata: customMetadata,
+      metadata: customMetadata as Record<string, string> | undefined,
     });
 
     // 8. Crear registro en base de datos
     const fileRecord = await prisma.storage_files.create({
       data: {
+        id: crypto.randomUUID(),
         filename: uniqueFilename,
         originalName: sanitizeFilename(filename),
         storagePath: uploadResult.path,
-        storageProvider: this.provider,
+        storageProvider: this.provider as StorageProvider,
         mimeType,
         size: BigInt(uploadResult.size),
         checksum,
         userId,
         folderId,
-        accessLevel,
-        usageContext,
+        accessLevel: accessLevel as FileAccessLevel,
+        usageContext: usageContext as FileUsageContext,
         encrypted: mustEncrypt,
         encryptionKeyId: encryptionData?.keyId,
-        metadata: encryptionData
+        metadata: (encryptionData
           ? {
               ...customMetadata,
               encryption: {
@@ -155,9 +156,9 @@ export class StorageService {
                 authTag: encryptionData.authTag,
               },
             }
-          : customMetadata,
+          : customMetadata) as any,
         expiresAt,
-      },
+      } as any,
     });
 
     // 9. Actualizar cuota del usuario
@@ -432,9 +433,10 @@ export class StorageService {
     // 4. Crear registro de compartición
     const share = await prisma.file_shares.create({
       data: {
+        id: crypto.randomUUID(),
         fileId,
         sharedBy: userId,
-        shareType,
+        shareType: shareType as ShareType,
         shareToken,
         password: hashedPassword,
         maxDownloads,
@@ -482,7 +484,7 @@ export class StorageService {
     // 1. Buscar share
     const share = await prisma.file_shares.findUnique({
       where: { shareToken },
-      include: { file: true },
+      include: { storage_files: true },
     });
 
     if (!share) {
@@ -511,7 +513,7 @@ export class StorageService {
       }
     }
 
-    if (!share.file || share.file.deletedAt) {
+    if (!share.storage_files || share.storage_files.deletedAt) {
       throw new FileNotFoundError('File not found');
     }
 
@@ -522,7 +524,7 @@ export class StorageService {
     });
 
     return {
-      file: this.mapToFileMetadata(share.file),
+      file: this.mapToFileMetadata(share.storage_files),
       canDownload: share.allowDownload,
       canView: share.allowView,
     };
@@ -552,12 +554,13 @@ export class StorageService {
 
       quota = await prisma.storage_quotas.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           maxStorage: limits.maxStorage,
           maxFileSize: limits.maxFileSize,
           maxFiles: limits.maxFiles,
-          subscriptionTier: tier,
-        },
+          subscriptionTier: tier as string,
+        } as any,
       });
     }
 
@@ -680,6 +683,7 @@ export class StorageService {
     try {
       await prisma.file_access_logs.create({
         data: {
+          id: crypto.randomUUID(),
           fileId,
           userId,
           action,

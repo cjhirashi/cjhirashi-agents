@@ -85,9 +85,9 @@ export class VercelBlobAdapter implements StorageAdapter {
       // Subir a Vercel Blob
       let blob: PutBlobResult;
       if (file instanceof File) {
-        blob = await put(storagePath, file, uploadOptions);
+        blob = await put(storagePath, file, uploadOptions as any);
       } else {
-        blob = await put(storagePath, buffer, uploadOptions);
+        blob = await put(storagePath, buffer, uploadOptions as any);
       }
 
       return {

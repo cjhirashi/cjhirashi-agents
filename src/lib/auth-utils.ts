@@ -24,9 +24,9 @@ export async function getCurrentUser() {
   const user = await prisma.users.findUnique({
     where: { email: session.user.email },
     include: {
-      agentPermissions: {
+      user_agent_permissions: {
         include: {
-          agent: true,
+          agents: true,
         },
       },
     },
@@ -89,7 +89,7 @@ export async function hasAgentAccess(agentId: string) {
   if (agent.createdBy === user.id) return true;
 
   // Check if user has specific permission for this agent
-  return user.agentPermissions.some((permission) => permission.agentId === agentId);
+  return user.user_agent_permissions.some((permission: any) => permission.agentId === agentId);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -118,7 +118,7 @@ export async function getAccessibleAgents() {
         { isPublic: true },
         { createdBy: user.id },
         {
-          userPermissions: {
+          user_agent_permissions: {
             some: { userId: user.id },
           },
         },
