@@ -10,8 +10,6 @@
  * @module lib/rag/search
  */
 
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { PineconeStore } from '@langchain/pinecone';
 import { getPineconeIndex } from '@/lib/pinecone';
 import logger from '@/lib/logging/logger';
 // Note: Document model not yet in schema - will be added in future phase
@@ -128,33 +126,33 @@ export async function semanticSearch(
     }
 
     // ═══════════════════════════════════════════════════════
-    // STEP 2: Initialize embeddings model
+    // STEP 2: Generate query embedding
     // ═══════════════════════════════════════════════════════
 
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
-    });
+    const queryEmbedding = await generateEmbedding(query);
 
-    // ═══════════════════════════════════════════════════════
-    // STEP 3: Create Pinecone store with user namespace
-    // ═══════════════════════════════════════════════════════
-
-    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-      pineconeIndex,
-      namespace: userId,
-      textKey: 'text',
-    });
-
-    logger.info('[RAG Search] Vector store initialized', {
+    logger.info('[RAG Search] Query embedding generated', {
       namespace: userId,
     });
 
     // ═══════════════════════════════════════════════════════
-    // STEP 4: Perform similarity search
+    // STEP 3: Search Pinecone with user namespace
     // ═══════════════════════════════════════════════════════
 
-    const searchResults = await vectorStore.similaritySearchWithScore(query, topK);
+    const pineconeResults = await pineconeIndex.namespace(userId).query({
+      vector: queryEmbedding,
+      topK,
+      includeMetadata: true,
+    });
+
+    // Convert Pinecone results to our format
+    const searchResults = (pineconeResults.matches || []).map((match) => [
+      {
+        pageContent: (match.metadata?.content as string) || '',
+        metadata: match.metadata,
+      },
+      match.score || 0,
+    ]) as Array<[{ pageContent: string; metadata: Record<string, unknown> }, number]>;
 
     logger.info('[RAG Search] Similarity search completed', {
       resultsFound: searchResults.length,
@@ -345,4 +343,32 @@ export async function hasIndexedDocuments(userId: string): Promise<boolean> {
   });
 
   return count > 0;
+}
+
+/**
+ * Generate embedding for text using OpenAI API
+ */
+async function generateEmbedding(text: string): Promise<number[]> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as { data: Array<{ embedding: number[] }> };
+  return data.data[0].embedding;
 }

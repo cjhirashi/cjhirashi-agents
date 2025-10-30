@@ -11,11 +11,8 @@
  * @module lib/rag/pipeline
  */
 
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { PineconeStore } from '@langchain/pinecone';
-import { Document as LangChainDocument } from '@langchain/core/documents';
+import pdf from 'pdf-parse';
+import { openai } from '@ai-sdk/openai';
 import { put } from '@vercel/blob';
 import { getPineconeIndex } from '@/lib/pinecone';
 import logger from '@/lib/logging/logger';
@@ -203,21 +200,20 @@ export async function processDocument(
 
     logger.info('[RAG Pipeline] Splitting text into chunks');
 
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize,
-      chunkOverlap,
-      separators: ['\n\n', '\n', '. ', ' ', ''],
-    });
+    // Simple text splitting (without LangChain)
+    const chunks = splitText(extractedText, chunkSize, chunkOverlap);
 
-    const langchainDocs = await textSplitter.createDocuments([extractedText], [
-      {
+    const langchainDocs = chunks.map((content, index) => ({
+      pageContent: content,
+      metadata: {
         documentId: document.id,
         userId,
         filename: file.name,
         contentType,
         language,
+        chunkIndex: index,
       },
-    ]);
+    }));
 
     logger.info('[RAG Pipeline] Text split into chunks', {
       totalChunks: langchainDocs.length,
@@ -241,21 +237,30 @@ export async function processDocument(
       throw new Error('Pinecone index not available');
     }
 
-    // Initialize embeddings model (OpenAI text-embedding-3-small)
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
-    });
+    // Generate embeddings for all chunks using OpenAI API directly
+    const vectors = await Promise.all(
+      langchainDocs.map(async (doc, index) => {
+        const embedding = await generateEmbedding(doc.pageContent);
+        return {
+          id: `${document.id}-chunk-${index}`,
+          values: embedding,
+          metadata: {
+            documentId: document.id,
+            userId,
+            content: doc.pageContent,
+            ...doc.metadata,
+          },
+        };
+      })
+    );
 
     // Store vectors in Pinecone with namespace = userId
-    await PineconeStore.fromDocuments(langchainDocs, embeddings, {
-      pineconeIndex,
-      namespace: userId,
-      textKey: 'text',
-    });
+    if (vectors.length > 0) {
+      await pineconeIndex.namespace(userId).upsert(vectors);
+    }
 
     logger.info('[RAG Pipeline] Vectors stored in Pinecone', {
-      vectorsStored: langchainDocs.length,
+      vectorsStored: vectors.length,
       namespace: userId,
       documentId: document.id,
     });
@@ -365,12 +370,10 @@ async function extractText(file: File, blobUrl: string): Promise<string> {
     let extractedText: string;
 
     if (mimeType === 'application/pdf') {
-      // Use PDFLoader for PDFs
+      // Use pdf-parse for PDFs
       const arrayBuffer = await file.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const loader = new PDFLoader(blob);
-      const docs = await loader.load();
-      extractedText = docs.map((doc) => doc.pageContent).join('\n\n');
+      const data = await pdf(Buffer.from(arrayBuffer));
+      extractedText = data.text;
     } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
       // Direct read for text files
       extractedText = await file.text();
@@ -477,4 +480,58 @@ export async function deleteDocument(documentId: string, userId: string): Promis
 
     throw error;
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIMPLE TEXT SPLITTER (without LangChain)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Simple text splitting function
+ * Splits text into chunks with overlap
+ */
+function splitText(text: string, chunkSize: number = 800, overlap: number = 200): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+
+  while (start < text.length) {
+    const end = Math.min(start + chunkSize, text.length);
+    const chunk = text.substring(start, end);
+    chunks.push(chunk);
+    start += chunkSize - overlap;
+  }
+
+  return chunks;
+}
+
+// ═══════════════════════════════════════════════════════════
+// EMBEDDING GENERATION
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Generate embedding for text using OpenAI API
+ */
+async function generateEmbedding(text: string): Promise<number[]> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
+      input: text,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.statusText}`);
+  }
+
+  const data = (await response.json()) as { data: Array<{ embedding: number[] }> };
+  return data.data[0].embedding;
 }
